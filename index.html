@@ -1194,6 +1194,8 @@ document.querySelectorAll('#wx button').forEach(b => b.addEventListener('click',
 const LAB = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 if (!LAB) document.querySelector('#wx [data-w="starry"]')?.remove();
 if (!XMAS) document.querySelector('#wx [data-w="snow"]')?.remove(); else setWeather('snow', true);
+// ?weather=<name> starts in that weather straight away (used by the screenshot tests).
+if (new URLSearchParams(location.search).has('weather')) setWeather(new URLSearchParams(location.search).get('weather'), true);
 addEventListener('keydown', e => { const n = ['golden', 'overcast', 'rain', 'mist', LAB && 'starry'][+e.key - 1]; if (n) setWeather(n); });
 
 /* ---------- cockpit ---------- */
@@ -1317,8 +1319,12 @@ addEventListener('resize', () => {
 
 /* ---------- input: keys, slider, smart trainer ---------- */
 const START = real ? 850 : 0;          // Leckhampton: begin on the lane about 150 m below where the hill steepens, not out in the vale
-const st = { s: START, v: 6, power: 220, target: 220, dist: 0, trainer: false };
-window.ride = st; st.haze = hazeCol; st.built = st0;
+// Test options, for the screenshot tests: ?at=<metres> starts that far along the road; ?freeze stops the clock,
+// so the rider, weather, wind and grain hold still and every frame is the same.
+const AT = parseFloat(new URLSearchParams(location.search).get('at')), FREEZE = new URLSearchParams(location.search).has('freeze');
+// frame: frames drawn so far; pending: verge grass near the rider still to be built (one patch is built per frame)
+const st = { s: isFinite(AT) ? AT : START, v: 6, power: 220, target: 220, dist: 0, trainer: false, frame: 0, pending: 0 };
+window.ride = st; st.haze = hazeCol; st.built = st0; st.length = LEN;
 st.goNear = (x, z) => { let b = 0, bd = 1e12; for (let i = 0; i < N; i++) { const d = (P[i].x - x) ** 2 + (P[i].z - z) ** 2; if (d < bd) { bd = d; b = i; } } st.s = Math.max(0, b * LEN / N - 60); return Math.round(Math.sqrt(bd)); };   // for checking: ride to the road nearest a point
 st.weather = (n, i) => setWeather(n, i);
 const skip = m => { st.s = (((st.s + m) % LEN) + LEN) % LEN; };
@@ -1584,7 +1590,7 @@ let scene_t = 0, scene_i = 0;
 if (SCENERY !== null) { setClean(true); st.target = st.power = 90; if (SCENERY === 'nobars') rig.visible = false; }
 
 function tick() {
-  const dt = Math.min(clock.getDelta(), 0.05);
+  const dt = FREEZE ? 0 : Math.min(clock.getDelta(), 0.05);
   uTime.value += dt;
 
   // power -> speed: gravity, rolling resistance and air drag
@@ -1624,12 +1630,14 @@ function tick() {
   // sun shadow box travels with the rider, pushed forward into the view
   sun.target.position.copy(pose.p).addScaledVector(pose.t, 70);
   sun.position.copy(sun.target.position).addScaledVector(sunDir, 350);
-  let built = false;
+  let built = false, pending = 0;
   for (const c of chunks) {
     const d2 = c.c.distanceToSquared(camera.position);
-    if (d2 < 230 * 230) { if (!c.mesh && !built) { c.mesh = c.build(); built = true; } }
+    // one patch per frame keeps the ride smooth; with ?freeze, build them all at once (same order, so the same grass)
+    if (d2 < 230 * 230) { if (!c.mesh) { if (!built || FREEZE) { c.mesh = c.build(); built = true; } else pending++; } }
     else if (c.mesh && d2 > 330 * 330) { scene.remove(c.mesh); c.mesh.dispose(); c.mesh = null; }
   }
+  st.pending = pending;
 
   sunNdc.copy(camera.position).addScaledVector(sunDir, 1000).project(camera);
   rays.uniforms.uSunUv.value.set(sunNdc.x * 0.5 + 0.5, sunNdc.y * 0.5 + 0.5);
@@ -1655,9 +1663,14 @@ function tick() {
   }
 
   composer.render();
+  st.frame++;
   if (first) { first = false; $('loading').style.opacity = 0; setTimeout(() => $('loading').remove(), 900); }
+  // ?freeze: once the view is complete, stop drawing, so a screenshot is not competing with the next frame
+  if (FREEZE && st.pending === 0 && st.frame > 2) { st.held = true; return; }
   requestAnimationFrame(tick);
 }
+// for tests: move to a distance along the road and draw again (with ?freeze, drawing stops once the view is complete)
+st.go = s => { st.s = (((s % LEN) + LEN) % LEN); if (st.held) { st.held = false; requestAnimationFrame(tick); } };
 tick();
 </script>
 </body>
