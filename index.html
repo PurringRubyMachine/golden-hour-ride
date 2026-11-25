@@ -1156,7 +1156,7 @@ for (const k in WEATHER) WEATHER[k].snow ??= 0;
 const wx = JSON.parse(JSON.stringify(WEATHER.golden));
 let wxTarget = WEATHER.golden;
 function setWeather(name, instant) {
-  if (!WEATHER[name]) return;
+  if (!Object.hasOwn(WEATHER, name)) return;          // own names only: "constructor" or "toString" are not weathers
   wxTarget = WEATHER[name];
   if (instant) Object.assign(wx, JSON.parse(JSON.stringify(wxTarget)));
   // re-bake what the road and bike reflect, using the new sky
