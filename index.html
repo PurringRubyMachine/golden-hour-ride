@@ -105,6 +105,31 @@ function ridged(x, y, o = 4) {       // sharp crests and gullies, for mountains
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const canvas2d = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
 
+/* ---------- options from the address bar ---------- */
+// ?course=leckhampton  the real Leckhampton loop instead of the invented valley
+// ?theme=christmas     the valley under snow at dusk (valley only)
+// ?scenery[=nobars]    drift along on its own with nothing on screen; nobars also hides the handlebars
+// ?hills=<0-100>       how much of each hill a smart trainer feels, for this visit
+// ?at, ?weather, ?freeze  test options: see tests/visual/README.md
+function parseOptions(search) {
+  const q = new URLSearchParams(search);
+  return {
+    course: q.get('course') === 'leckhampton' ? 'leckhampton' : 'valley',
+    xmas: q.get('theme') === 'christmas' && q.get('course') !== 'leckhampton',
+    scenery: q.get('scenery'),
+    hills: q.get('hills'),
+    at: parseFloat(q.get('at')),
+    weather: q.has('weather') ? q.get('weather') : null,
+    freeze: q.has('freeze'),
+  };
+}
+const OPTIONS = parseOptions(location.search);
+
+/* ---------- shader uniforms shared between parts of the scene ---------- */
+const uTime = { value: 0 }, uCloud = { value: 1 }, uMote = { value: 1 }, uMeadow = { value: new THREE.Vector2() }, uSunAmt = { value: 1 };
+const uRain = { value: 0 };                                                                    // how wet: 0 dry, 1 raining
+const uPx = { value: innerHeight * Math.min(devicePixelRatio, 2) / (2 * Math.tan(0.6)) };      // metres to pixels at 1 m
+
 /* ---------- photo-scanned surfaces (Poly Haven, CC0) ---------- */
 const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('missing texture')); i.src = src; });
 const TEX = ['asphalt_02_diff_2k', 'asphalt_02_nor_gl_2k', 'leafy_grass_diff_2k', 'leafy_grass_nor_gl_1k', 'rock_face_03_diff_1k', 'gravel_ground_01_diff_1k'];
@@ -145,7 +170,7 @@ scene.add(camera);
 
 /* ---------- sky, sun, haze ---------- */
 // ?theme=christmas: the same valley under snow at dusk, with lights in the trees and a few chalets
-const XMAS = new URLSearchParams(location.search).get('theme') === 'christmas' && new URLSearchParams(location.search).get('course') !== 'leckhampton';
+const XMAS = OPTIONS.xmas;
 const SUN_ELEV = XMAS ? 4.5 : 11, SUN_AZ = -24;
 const sunDir = new V3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - SUN_ELEV), THREE.MathUtils.degToRad(SUN_AZ));
 const sunFlat = new V3(sunDir.x, 0, sunDir.z).normalize();
@@ -163,6 +188,7 @@ envScene.add(sky);
 const pmrem = new THREE.PMREMGenerator(renderer);
 let envRT = pmrem.fromScene(envScene);
 scene.environment = envRT.texture;
+function setEnvironment(rt) { envRT.dispose(); envRT = rt; scene.environment = rt.texture; }      // the weather swaps in a new sky reflection
 
 // Read the sky's own horizon colour so the haze melts into it.
 function sampleSky(dir) {
@@ -194,10 +220,10 @@ const hemi = new THREE.HemisphereLight(XMAS ? 0xa6b4ea : 0xa9b8ee, XMAS ? 0x9aa2
 scene.add(hemi);
 
 /* ---------- course: the invented valley, or a real road built from survey data ---------- */
-const COURSE = new URLSearchParams(location.search).get('course') === 'leckhampton' ? 'leckhampton' : 'valley';
+const COURSE = OPTIONS.course;
 // Scenery mode (?scenery): the ride drifts along on its own at a gentle pace with nothing on screen and the weather
 // slowly changing, for leaving on in the background. ?scenery=nobars also hides the handlebars.
-const SCENERY = new URLSearchParams(location.search).get('scenery');
+const SCENERY = OPTIONS.scenery;
 let real = null;
 if (COURSE !== 'valley') {
   $('loading').textContent = 'Building Leckhampton Hill…';
@@ -459,7 +485,7 @@ const road = new THREE.Mesh(strip(-3.5, 0, 3.5, 0, 0, 1, TILES),
 road.receiveShadow = true;
 scene.add(road);
 road.material.onBeforeCompile = s => {      // rain rings: each small cell of road gets a ripple that spreads and fades
-  s.uniforms.uTime = uTime; s.uniforms.uRain = rainU.uRain;
+  s.uniforms.uTime = uTime; s.uniforms.uRain = uRain;
   s.vertexShader = 'varying vec3 vWp;\n' + s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.)).xyz;');
   s.fragmentShader = `uniform float uTime, uRain; varying vec3 vWp;
     vec2 rip(vec2 p, float t){
@@ -496,7 +522,6 @@ for (const g of [strip(-6.8, -0.72, -3.5, 0.005, 1, 0, LEN / 5), strip(3.5, 0.00
 }
 
 /* ---------- grass along the verge (chunks, only the near ones are drawn) ---------- */
-const uTime = { value: 0 }, uCloud = { value: 1 }, uMote = { value: 1 }, uMeadow = { value: new THREE.Vector2() }, uSunAmt = { value: 1 };
 function grassTex() {
   const [c, g] = canvas2d(256, 256);
   for (let i = 0; i < 36; i++) {
@@ -1021,7 +1046,6 @@ const uLid = { value: 0 }, uCloudLit = { value: new V3() }, uCloudDark = { value
 }
 
 /* ---------- smoke from the quarry workings on the scarp (real courses) ---------- */
-const uPx = { value: innerHeight * Math.min(devicePixelRatio, 2) / (2 * Math.tan(0.6)) };      // metres to pixels at 1 m
 if (real && real.quarry) {
   const [qx, qz] = real.quarry, cands = [], src = [];
   for (let n = 0; n < 400; n++) {
@@ -1091,7 +1115,7 @@ const dome = new THREE.Mesh(new THREE.SphereGeometry(8000, 32, 16), new THREE.Sh
 dome.renderOrder = 1; dome.frustumCulled = false; scene.add(dome);
 
 // Rain: short streaks in a box that travels with the rider; they slant against your speed.
-const rainU = { uTime, uRain: { value: 0 }, uVel: { value: new V3() }, uCol: { value: new V3(0.9, 0.95, 1).multiplyScalar(hazeLum) } };
+const rainU = { uTime, uRain, uVel: { value: new V3() }, uCol: { value: new V3(0.9, 0.95, 1).multiplyScalar(hazeLum) } };
 const rainMesh = (() => {
   const n = 16000, a = new Float32Array(n * 6), e = new Float32Array(n * 2);
   for (let i = 0; i < n; i++) { const x = rnd() * 30, y = rnd() * 30, z = rnd() * 30; a.set([x, y, z, x, y, z], i * 6); e[i * 2 + 1] = 1; }
@@ -1165,7 +1189,7 @@ function setWeather(name, instant) {
   envScene.add(sky, dome);
   const rt = pmrem.fromScene(envScene, 0, 0.1, 20000);
   scene.add(sky, dome);
-  envRT.dispose(); envRT = rt; scene.environment = rt.texture;
+  setEnvironment(rt);
   u.uA.value = was[0]; u.uH.value.copy(was[1]); u.uZ.value.copy(was[2]); u.uPaint.value = was[3];
   document.querySelectorAll('#wx button').forEach(b => b.classList.toggle('on', b.dataset.w === name));
 }
@@ -1184,7 +1208,7 @@ function stepWeather(dt) {
   uCloud.value = wx.cloud; uMote.value = wx.mote; uLid.value = wx.dome; uSunAmt.value = Math.min(1, wx.sun / 10);
   uCloudLit.value.fromArray(wx.cLit); uCloudDark.value.fromArray(wx.cDark); uCloudHaze.value.fromArray(wx.fogCol);
   terrainMat.color.setScalar(wx.ground);                                          // wet ground is darker
-  rainU.uRain.value = wx.rain; rainMesh.visible = wx.rain > 0.01;
+  uRain.value = wx.rain; rainMesh.visible = wx.rain > 0.01;
   uSnow.value = wx.snow; snowMesh.visible = wx.snow > 0.01;
   road.material.roughness = wx.rough; road.material.color.setScalar(wx.tint);     // wet tarmac: darker and glossier
   renderer.toneMappingExposure = wx.expo;
@@ -1195,7 +1219,7 @@ const LAB = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 if (!LAB) document.querySelector('#wx [data-w="starry"]')?.remove();
 if (!XMAS) document.querySelector('#wx [data-w="snow"]')?.remove(); else setWeather('snow', true);
 // ?weather=<name> starts in that weather straight away (used by the screenshot tests).
-if (new URLSearchParams(location.search).has('weather')) setWeather(new URLSearchParams(location.search).get('weather'), true);
+if (OPTIONS.weather !== null) setWeather(OPTIONS.weather, true);
 addEventListener('keydown', e => { const n = ['golden', 'overcast', 'rain', 'mist', LAB && 'starry'][+e.key - 1]; if (n) setWeather(n); });
 
 /* ---------- cockpit ---------- */
@@ -1317,13 +1341,23 @@ addEventListener('resize', () => {
   uPx.value = innerHeight * Math.min(devicePixelRatio, 2) / (2 * Math.tan(0.6));
 });
 
+/* ---------- speed model: power to speed, against gravity, rolling resistance and air drag ---------- */
+const MASS = 80, CRR = 0.004, DRAG = 0.5 * 1.2 * 0.32;     // rider and bike kg; rolling resistance; half air density x CdA
+// Descents count half, and above 54 km/h (15 m/s) the rider feathers the brakes, so speed does not run away downhill.
+// climb: rise per metre along the road (sine of the slope). Returns the new speed in m/s, never below 0.5.
+function nextSpeed(v, power, climb, dt) {
+  const slope = climb > 0 ? climb : climb * 0.5, brake = v > 15 ? MASS * 0.5 * (v - 15) : 0;
+  const force = power / Math.max(v, 2) - MASS * 9.81 * (slope + CRR) - DRAG * v * v - brake;
+  return Math.max(0.5, v + force / MASS * dt);
+}
+
 /* ---------- input: keys, slider, smart trainer ---------- */
 const START = real ? 850 : 0;          // Leckhampton: begin on the lane about 150 m below where the hill steepens, not out in the vale
 // Test options, for the screenshot tests: ?at=<metres> starts that far along the road; ?freeze stops the clock,
 // so the rider, weather, wind and grain hold still and every frame is the same.
-const AT = parseFloat(new URLSearchParams(location.search).get('at')), FREEZE = new URLSearchParams(location.search).has('freeze');
+const AT = OPTIONS.at, FREEZE = OPTIONS.freeze;
 // frame: frames drawn so far; pending: verge grass near the rider still to be built (one patch is built per frame)
-const st = { s: isFinite(AT) ? AT : START, v: 6, power: 220, target: 220, dist: 0, trainer: false, frame: 0, pending: 0 };
+const st = { s: isFinite(AT) ? AT : START, v: 6, power: 220, target: 220, dist: 0, trainer: false, frame: 0, pending: 0, grade: 0 };
 window.ride = st; st.haze = hazeCol; st.built = st0; st.length = LEN;
 st.goNear = (x, z) => { let b = 0, bd = 1e12; for (let i = 0; i < N; i++) { const d = (P[i].x - x) ** 2 + (P[i].z - z) ** 2; if (d < bd) { bd = d; b = i; } } st.s = Math.max(0, b * LEN / N - 60); return Math.round(Math.sqrt(bd)); };   // for checking: ride to the road nearest a point
 st.weather = (n, i) => setWeather(n, i);
@@ -1354,7 +1388,7 @@ const bike = { dev: null, known: null, point: null, busy: false, sent: 0, at: 0,
 // so a 10 % climb pedals like 5 %; descents count half again. ?hills=100 gives the full gradient, ?hills=0 none.
 const HILLS_KEY = 'golden-hour-ride-hills';         // kept in this browser; ?hills= sets it for one visit
 let HILLS = (() => {
-  const q = new URLSearchParams(location.search).get('hills');
+  const q = OPTIONS.hills;
   let n = 50; try { const k = localStorage.getItem(HILLS_KEY); if (k !== null && isFinite(+k)) n = +k; } catch {}
   if (q !== null && q !== '' && isFinite(+q)) n = +q;
   return Math.max(0, Math.min(100, n)) / 100;
@@ -1395,14 +1429,17 @@ function simParams(gradePct) {
   d.setUint8(0, OP_SIM);
   d.setInt16(1, 0, true);                                   // wind speed, 0.001 m/s
   d.setInt16(3, Math.round(gradePct * 100), true);          // gradient, 0.01 %
-  d.setUint8(5, Math.round(0.004 / 0.0001));                // rolling resistance, 0.0001
-  d.setUint8(6, Math.round(0.5 * 1.2 * 0.32 / 0.01));       // drag (half rho CdA), 0.01 kg/m
+  d.setUint8(5, Math.round(CRR / 0.0001));                  // rolling resistance, 0.0001
+  d.setUint8(6, Math.round(DRAG / 0.01));                   // drag (half rho CdA), 0.01 kg/m
   return d;
 }
 
+// the gradient the trainer is asked for: the road's, capped at 20 %, scaled by the hills setting (descents by half that)
+const trainerGrade = (grade, hills) => Math.max(-20, Math.min(20, grade)) * (grade > 0 ? hills : hills * 0.5);
+
 // about once a second, or sooner when the gradient has moved by more than 0.5 %
 async function sendGrade() {
-  const now = performance.now(), g = Math.max(-20, Math.min(20, grade)) * (grade > 0 ? HILLS : HILLS * 0.5), wait = now - bike.at;
+  const now = performance.now(), g = trainerGrade(st.grade, HILLS), wait = now - bike.at;
   if (!bike.point || bike.busy || wait < 250 || (wait < 1000 && Math.abs(g - bike.sent) <= 0.5)) return;
   bike.busy = true; bike.at = now;
   const point = bike.point;
@@ -1581,9 +1618,9 @@ function startAudio() {
 addEventListener('pointerdown', startAudio); addEventListener('keydown', startAudio);
 
 /* ---------- ride ---------- */
-const MASS = 80, LANE = -1.75, clock = new THREE.Clock();
+const LANE = -1.75, clock = new THREE.Clock();
 const pose = mkPose(), ahead = mkPose(), probe = mkPose(), look = new V3(), sunNdc = new V3(), fwd = new V3();
-let lean = 0, phase = 0, grade = 0, huT = 0, first = true;
+let lean = 0, phase = 0, huT = 0, first = true;
 // scenery mode's weather, in order, and how many seconds each one stays
 const SCENE_PLAN = XMAS ? [['snow', 280], ['mist', 100], ['snow', 180], ['golden', 95]] : [['golden', 200], ['mist', 110], ['rain', 130], ['overcast', 70], ['golden', 90]];
 let scene_t = 0, scene_i = 0;
@@ -1596,17 +1633,15 @@ function tick() {
   // power -> speed: gravity, rolling resistance and air drag
   st.power += (st.target - st.power) * Math.min(1, dt * 3);
   at(st.s, pose);
-  // Descents count half, and above 54 km/h the rider feathers the brakes, so speed does not run away downhill.
-  const v = st.v, slope = pose.t.y > 0 ? pose.t.y : pose.t.y * 0.5, brake = v > 15 ? MASS * 0.5 * (v - 15) : 0;
-  const force = st.power / Math.max(v, 2) - MASS * 9.81 * (slope + 0.004) - 0.5 * 1.2 * 0.32 * v * v - brake;
-  st.v = Math.max(0.5, v + force / MASS * dt);
+  const v = st.v;
+  st.v = nextSpeed(v, st.power, pose.t.y, dt);
   if (SCENERY !== null) {
     st.v = v + (5 - v) * Math.min(1, dt);                 // a steady 18 km/h, whatever the gradient
     scene_t += dt;
     if (scene_t >= SCENE_PLAN[scene_i][1]) { scene_t = 0; scene_i = (scene_i + 1) % SCENE_PLAN.length; setWeather(SCENE_PLAN[scene_i][0]); }
   }
   st.s = (st.s + st.v * dt) % LEN; st.dist += st.v * dt;
-  grade += (pose.t.y * 100 - grade) * Math.min(1, dt * 2);
+  st.grade += (pose.t.y * 100 - st.grade) * Math.min(1, dt * 2);
 
   // camera: follow the lane, look down the road, lean into bends, rock with the pedals
   at(st.s, pose); at(st.s + 9, ahead); at(st.s + 4, probe);
@@ -1658,7 +1693,7 @@ function tick() {
     drawHeadUnit(st.v * 3.6, st.power);
     $('h-pw').textContent = st.power.toFixed(0);
     $('h-sp').textContent = (st.v * 3.6).toFixed(1);
-    $('h-gr').textContent = (grade >= 0 ? '+' : '') + grade.toFixed(1);
+    $('h-gr').textContent = (st.grade >= 0 ? '+' : '') + st.grade.toFixed(1);
     $('h-di').textContent = (st.dist / 1000).toFixed(2);
   }
 
