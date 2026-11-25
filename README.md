@@ -30,9 +30,10 @@ Then open http://localhost:8791/.
 There is no build step: the browser loads the files as they are. Node.js is used only for development tools.
 
 ```bash
-npm install          # ESLint and Prettier
+npm install          # ESLint, Prettier and Playwright
 npm run lint
 npm run format:check
+npm run test:visual  # screenshot tests: see tests/visual/README.md
 ```
 
 Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.yml`).

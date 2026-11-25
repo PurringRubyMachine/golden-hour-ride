@@ -149,7 +149,8 @@ Each phase is its own branch and pull request, and leaves the ride working.
 ### Phase 1: safety net
 
 - Add test-only URL options: `?at=<metres>` to place the rider, `?freeze` to stop the clock, wind sway and weather changes, and `?weather=<name>`.
-- Playwright takes screenshots in headless Chromium at fixed spots: the valley, valley Christmas, and Leckhampton (the climb, the vale, woods, buildings), each in Golden and Mist. Comparisons allow a small tolerance.
+- Playwright takes screenshots in headless Chromium at fixed spots: the valley, valley Christmas, and Leckhampton (the climb, the vale, woods, buildings), each in two weathers.
+- Done: rendering uses SwiftShader (software GPU), which gives identical pixels on every run, so comparisons are exact (zero tolerance). With `?freeze` the page also stops drawing once a view is complete, because software rendering takes several seconds per frame. See `tests/visual/README.md`.
 - Commit the baseline screenshots. Later phases must match them unless a change is deliberate.
 
 ### Phase 2: split into modules
