@@ -9,14 +9,23 @@ import { uPx } from '../uniforms.js';
 import { camera, renderer, scene } from './renderer.js';
 import { hazeLum } from '../scenery/clouds.js';
 
-/* ---------- lens ---------- */
-export const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 }));
+export const composer = new EffectComposer(
+  renderer,
+  new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 }),
+);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.6, 3.5);
 composer.addPass(bloom);
-export const rays = new ShaderPass({      // light shafts: smear the bright sky outward from the sun
-  uniforms: { tDiffuse: { value: null }, uSunUv: { value: new THREE.Vector2(0.5, 0.5) }, uAmt: { value: 0 }, uThr: { value: hazeLum * 2.0 } },
-  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+export const rays = new ShaderPass({
+  // light shafts: smear the bright sky outward from the sun
+  uniforms: {
+    tDiffuse: { value: null },
+    uSunUv: { value: new THREE.Vector2(0.5, 0.5) },
+    uAmt: { value: 0 },
+    uThr: { value: hazeLum * 2.0 },
+  },
+  vertexShader:
+    'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
   fragmentShader: `
     uniform sampler2D tDiffuse; uniform vec2 uSunUv; uniform float uAmt, uThr; varying vec2 vUv;
     void main(){
@@ -32,13 +41,21 @@ export const rays = new ShaderPass({      // light shafts: smear the bright sky 
         tot += w; w *= 0.965;
       }
       gl_FragColor = vec4(base + acc / tot * uAmt, 1.);
-    }`
+    }`,
 });
 composer.addPass(rays);
 composer.addPass(new OutputPass());
 export const lens = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uSpeed: { value: 0 }, uRain: { value: 0 }, uPaint: { value: 0 }, uAspect: { value: innerWidth / innerHeight } },
-  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+  uniforms: {
+    tDiffuse: { value: null },
+    uTime: { value: 0 },
+    uSpeed: { value: 0 },
+    uRain: { value: 0 },
+    uPaint: { value: 0 },
+    uAspect: { value: innerWidth / innerHeight },
+  },
+  vertexShader:
+    'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
   fragmentShader: `
     uniform sampler2D tDiffuse; uniform float uTime, uSpeed, uRain, uPaint, uAspect; varying vec2 vUv;
     float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -84,13 +101,14 @@ export const lens = new ShaderPass({
       col *= 1. - smoothstep(0.12, 0.62, r2) * 0.55;        // vignette
       col += (h(vUv * 917. + fract(uTime) * 31.) - 0.5) * 0.035;   // grain
       gl_FragColor = vec4(col, 1.);
-    }`
+    }`,
 });
 composer.addPass(lens);
 addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
   lens.uniforms.uAspect.value = innerWidth / innerHeight;
-  uPx.value = innerHeight * Math.min(devicePixelRatio, 2) / (2 * Math.tan(0.6));
+  uPx.value = (innerHeight * Math.min(devicePixelRatio, 2)) / (2 * Math.tan(0.6));
 });
-

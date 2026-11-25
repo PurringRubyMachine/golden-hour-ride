@@ -1,6 +1,5 @@
 // Options read from the address bar.
 
-/* ---------- options from the address bar ---------- */
 // ?course=leckhampton  the real Leckhampton loop instead of the invented valley
 // ?theme=christmas     the valley under snow at dusk (valley only)
 // ?scenery[=nobars]    drift along on its own with nothing on screen; nobars also hides the handlebars
@@ -30,4 +29,5 @@ export const SCENERY = OPTIONS.scenery;
 
 // Test options, for the screenshot tests: ?at=<metres> starts that far along the road; ?freeze stops the clock,
 // so the rider, weather, wind and grain hold still and every frame is the same.
-export const AT = OPTIONS.at, FREEZE = OPTIONS.freeze;
+export const AT = OPTIONS.at,
+  FREEZE = OPTIONS.freeze;

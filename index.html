@@ -1,42 +1,63 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Golden Hour Ride</title>
-<link rel="stylesheet" href="styles/main.css">
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-} }
-</script>
-</head>
-<body>
-<canvas id="c"></canvas>
-<div id="hud">
-  <div><b id="h-pw">220</b><span>watts</span></div>
-  <div><b id="h-sp">0.0</b><span>km/h</span></div>
-  <div><b id="h-gr">0.0</b><span>gradient %</span></div>
-  <div><b id="h-di">0.00</b><span>km</span></div>
-</div>
-<div id="ctl">
-  <span>POWER</span>
-  <input id="pwr" type="range" min="0" max="600" step="5" value="220" aria-label="Power in watts">
-  <span>↑ ↓ keys</span>
-  <button id="skip" title="Jump 250 m up the road (→ key; ← goes back)">Skip 250 m ›</button>
-  <button id="voice" title="Say: rain, mist, overcast, sunny, skip, back, hide or show. For a smart trainer: easier or gear down, harder or gear up, flat, full">Voice: off</button>
-  <button id="course" title="Switch between the invented valley and the real Leckhampton Hill loop">Course</button>
-  <span id="wx"><button data-w="snow">Snow</button><button data-w="golden" class="on">Golden</button><button data-w="overcast">Overcast</button><button data-w="rain">Rain</button><button data-w="mist">Mist</button><button data-w="starry">Starry</button></span>
-  <button id="bt">Connect trainer</button>
-  <span id="hills" title="How much of each hill a smart trainer makes you feel. Turn it down if the climbs are too hard; 0 % is flat."><button id="hless" aria-label="Make hills easier">−</button><span id="hval">Hills 50 %</span><button id="hmore" aria-label="Make hills harder">+</button></span>
-  <button id="clean" title="Hide everything on screen (H key, or say “hide”). Press H, click, or say “show” to bring it back">Hide info</button>
-  <button id="logbtn" title="Distance you have ridden, kept in this browser">Log</button>
-</div>
-<div id="log" hidden></div>
-<div id="credit"></div>
-<div id="loading">Building the valley…</div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Golden Hour Ride</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="hud">
+      <div><b id="h-pw">220</b><span>watts</span></div>
+      <div><b id="h-sp">0.0</b><span>km/h</span></div>
+      <div><b id="h-gr">0.0</b><span>gradient %</span></div>
+      <div><b id="h-di">0.00</b><span>km</span></div>
+    </div>
+    <div id="ctl">
+      <span>POWER</span>
+      <input id="pwr" type="range" min="0" max="600" step="5" value="220" aria-label="Power in watts" />
+      <span>↑ ↓ keys</span>
+      <button id="skip" title="Jump 250 m up the road (→ key; ← goes back)">Skip 250 m ›</button>
+      <button
+        id="voice"
+        title="Say: rain, mist, overcast, sunny, skip, back, hide or show. For a smart trainer: easier or gear down, harder or gear up, flat, full"
+      >
+        Voice: off
+      </button>
+      <button id="course" title="Switch between the invented valley and the real Leckhampton Hill loop">Course</button>
+      <span id="wx"
+        ><button data-w="snow">Snow</button><button data-w="golden" class="on">Golden</button
+        ><button data-w="overcast">Overcast</button><button data-w="rain">Rain</button
+        ><button data-w="mist">Mist</button><button data-w="starry">Starry</button></span
+      >
+      <button id="bt">Connect trainer</button>
+      <span
+        id="hills"
+        title="How much of each hill a smart trainer makes you feel. Turn it down if the climbs are too hard; 0 % is flat."
+        ><button id="hless" aria-label="Make hills easier">−</button><span id="hval">Hills 50 %</span
+        ><button id="hmore" aria-label="Make hills harder">+</button></span
+      >
+      <button
+        id="clean"
+        title="Hide everything on screen (H key, or say “hide”). Press H, click, or say “show” to bring it back"
+      >
+        Hide info
+      </button>
+      <button id="logbtn" title="Distance you have ridden, kept in this browser">Log</button>
+    </div>
+    <div id="log" hidden></div>
+    <div id="credit"></div>
+    <div id="loading">Building the valley…</div>
 
-<script type="module" src="src/main.js"></script>
-</body>
+    <script type="module" src="src/main.js"></script>
+  </body>
 </html>

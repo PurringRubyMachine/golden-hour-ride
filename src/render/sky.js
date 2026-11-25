@@ -6,10 +6,13 @@ import { renderer, scene } from './renderer.js';
 
 const V3 = THREE.Vector3;
 
-/* ---------- sky, sun, haze ---------- */
-
-const SUN_ELEV = XMAS ? 4.5 : 11, SUN_AZ = -24;
-export const sunDir = new V3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - SUN_ELEV), THREE.MathUtils.degToRad(SUN_AZ));
+const SUN_ELEV = XMAS ? 4.5 : 11,
+  SUN_AZ = -24;
+export const sunDir = new V3().setFromSphericalCoords(
+  1,
+  THREE.MathUtils.degToRad(90 - SUN_ELEV),
+  THREE.MathUtils.degToRad(SUN_AZ),
+);
 export const sunFlat = new V3(sunDir.x, 0, sunDir.z).normalize();
 
 export const sky = new Sky();
@@ -25,7 +28,11 @@ envScene.add(sky);
 export const pmrem = new THREE.PMREMGenerator(renderer);
 let envRT = pmrem.fromScene(envScene);
 scene.environment = envRT.texture;
-export function setEnvironment(rt) { envRT.dispose(); envRT = rt; scene.environment = rt.texture; }      // the weather swaps in a new sky reflection
+export function setEnvironment(rt) {
+  envRT.dispose();
+  envRT = rt;
+  scene.environment = rt.texture;
+} // the weather swaps in a new sky reflection
 
 // Read the sky's own horizon colour so the haze melts into it.
 function sampleSky(dir) {
