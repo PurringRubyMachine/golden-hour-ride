@@ -1,7 +1,7 @@
 // Trees: pines in the valley (a trunk plus whorls of needle cards), broadleaf on real courses.
 import * as THREE from 'three';
 import { canvas2d } from '../util/dom.js';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { fbm } from '../util/noise.js';
 import { XMAS } from '../options.js';
 import { uTime } from '../uniforms.js';
@@ -12,6 +12,7 @@ import { TS, meshH } from '../course/terrain.js';
 import { XL_COLS, chalets, xl } from './chalets.js';
 
 const V3 = THREE.Vector3;
+const rnd = makeRandom('trees');
 
 {
   const [bc, bg] = canvas2d(256, 256);

@@ -1,10 +1,12 @@
 // Christmas lights.
 import * as THREE from 'three';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { st0 } from '../course/course.js';
 import { xl } from './chalets.js';
+
+const rnd = makeRandom('lights');
 
 if (xl.p.length) {
   // every Christmas light is one glowing point; bright enough to bloom

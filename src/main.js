@@ -1,7 +1,6 @@
-// Start-up. Load the textures and the course first. Then build everything else, in this order: the scenery
-// is placed with one seeded random stream, so the order the modules run in decides where everything goes.
-// (Modules that wait on a file let their siblings run meanwhile, which is why the scene is imported only
-// once loading has finished.)
+// Start-up. Load the textures and the course first, then build the scene and start the ride.
+// (A module that waits on a file lets its siblings run meanwhile, so the scene is imported only once loading
+// has finished: every scene module can then rely on the textures and the course being ready.)
 import './render/textures.js';
 import './course/course.js';
 

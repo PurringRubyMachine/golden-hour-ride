@@ -1,12 +1,14 @@
 // The road surface and its verges.
 import * as THREE from 'three';
 import { canvas2d } from '../util/dom.js';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { XMAS } from '../options.js';
 import { uRain, uTime } from '../uniforms.js';
 import { MAX_ANISO, scene } from '../render/renderer.js';
 import { imgAsphalt, imgAsphaltN, imgGravel, imgTex } from '../render/textures.js';
 import { LEN, N, P, R } from '../course/road.js';
+
+const rnd = makeRandom('roadway');
 
 const TILES = Math.round(LEN / 12);
 function strip(offA, dyA, offB, dyB, uA, uB, vTiles) {

@@ -1,11 +1,13 @@
 // Real courses: smoke from the quarry workings on the scarp.
 import * as THREE from 'three';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { uPx, uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { demH, real, st0 } from '../course/course.js';
 import { meshH } from '../course/terrain.js';
 import { uCloudHaze } from './clouds.js';
+
+const rnd = makeRandom('smoke');
 
 if (real && real.quarry) {
   const [qx, qz] = real.quarry,

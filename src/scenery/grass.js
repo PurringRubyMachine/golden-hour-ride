@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { canvas2d } from '../util/dom.js';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { XMAS } from '../options.js';
 import { uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
@@ -10,6 +10,7 @@ import { N, P, R, T } from '../course/road.js';
 import { meshH } from '../course/terrain.js';
 
 const V3 = THREE.Vector3;
+const rnd = makeRandom('grass');
 
 function grassTex() {
   const [c, g] = canvas2d(256, 256);
@@ -67,6 +68,7 @@ export const chunks = [];
     ps = new V3(),
     col = new THREE.Color();
   const build = (c0) => {
+    const rnd = makeRandom(`grass patch ${c0}`); // seeded by where the patch is, not when it is built
     const mesh = new THREE.InstancedMesh(tuftGeo, grassMat, COUNT);
     for (let k = 0; k < COUNT; k++) {
       const i = c0 + Math.floor(rnd() * PER),

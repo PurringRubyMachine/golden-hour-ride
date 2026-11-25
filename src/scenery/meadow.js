@@ -1,6 +1,6 @@
 // A field of grass that travels with the rider and reads the terrain's height.
 import * as THREE from 'three';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { fbm, smooth } from '../util/noise.js';
 import { XMAS } from '../options.js';
 import { uMeadow, uTime } from '../uniforms.js';
@@ -9,6 +9,8 @@ import { nearRoad } from '../course/road.js';
 import { H, TC, TG, TS, TW, tGeo, tPos } from '../course/terrain.js';
 import { grassMat, tuftGeo } from './grass.js';
 import { stamps } from './pastoral.js';
+
+const rnd = makeRandom('meadow');
 
 {
   const data = new Float32Array(TW * TW * 4),

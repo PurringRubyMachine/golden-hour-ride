@@ -1,13 +1,14 @@
 // Real courses: buildings, hedges and walls.
 import * as THREE from 'three';
 import { canvas2d } from '../util/dom.js';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { MAX_ANISO, scene } from '../render/renderer.js';
 import { real } from '../course/course.js';
 import { N, P } from '../course/road.js';
 import { meshH } from '../course/terrain.js';
 
 const V3 = THREE.Vector3;
+const rnd = makeRandom('buildings');
 
 if (real && real.osm.buildings.length) {
   const m4 = new THREE.Matrix4(),

@@ -1,6 +1,6 @@
 // Weather: sky lid, rain, snow, and the change from one weather to another.
 import * as THREE from 'three';
-import { rnd } from './util/random.js';
+import { makeRandom } from './util/random.js';
 import { OPTIONS, SCENERY, XMAS } from './options.js';
 import { uCloud, uMote, uPx, uRain, uSunAmt, uTime } from './uniforms.js';
 import { camera, renderer, scene } from './render/renderer.js';
@@ -10,6 +10,7 @@ import { road } from './scenery/roadway.js';
 import { hazeLum, uCloudDark, uCloudHaze, uCloudLit, uLid } from './scenery/clouds.js';
 
 const V3 = THREE.Vector3;
+const rnd = makeRandom('weather');
 
 // An overcast lid: a dome that greys out the clear sky by a chosen amount.
 const dome = new THREE.Mesh(

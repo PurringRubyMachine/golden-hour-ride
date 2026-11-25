@@ -1,4 +1,5 @@
-// Builds the scene and starts the ride. Each module builds its part when it is imported, in this order.
+// Builds the scene and starts the ride. Each module builds its part when it is imported. Each draws on its own
+// random stream (util/random.js), so the order here does not change where anything is placed.
 import './util/dom.js';
 import './util/random.js';
 import './util/noise.js';

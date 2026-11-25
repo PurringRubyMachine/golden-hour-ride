@@ -1,11 +1,12 @@
 // Clouds and dust motes.
 import * as THREE from 'three';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { uCloud, uMote, uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { hazeCol, sunFlat } from '../render/sky.js';
 
 const V3 = THREE.Vector3;
+const rnd = makeRandom('clouds');
 
 export const hazeLum = (hazeCol.r + hazeCol.g + hazeCol.b) / 3;
 export const uLid = { value: 0 },

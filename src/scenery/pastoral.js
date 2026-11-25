@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { canvas2d } from '../util/dom.js';
-import { rnd } from '../util/random.js';
+import { makeRandom } from '../util/random.js';
 import { smooth } from '../util/noise.js';
 import { scene } from '../render/renderer.js';
 import { demH, real, st0 } from '../course/course.js';
@@ -10,6 +10,7 @@ import { N, P, R, T, nearRoad } from '../course/road.js';
 import { TC, TG, TS, TW, meshH, tCol, tPos } from '../course/terrain.js';
 
 const V3 = THREE.Vector3;
+const rnd = makeRandom('pastoral');
 
 export const stamps = []; // patches where the meadow is grazed short or cut to stubble
 if (real) {
