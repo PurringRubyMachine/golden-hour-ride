@@ -109,11 +109,11 @@ const canvas2d = (w, h) => { const c = document.createElement('canvas'); c.width
 const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('missing texture')); i.src = src; });
 const TEX = ['asphalt_02_diff_2k', 'asphalt_02_nor_gl_2k', 'leafy_grass_diff_2k', 'leafy_grass_nor_gl_1k', 'rock_face_03_diff_1k', 'gravel_ground_01_diff_1k'];
 const readable = img => { try { const [, g] = canvas2d(1, 1); g.drawImage(img, 0, 0, 1, 1); g.getImageData(0, 0, 1, 1); return true; } catch (e) { return false; } };
-let imgs = await Promise.all(TEX.map(n => loadImg(`assets/${n}.jpg`))).catch(() => null);
-if (!imgs || !readable(imgs[0]) || location.search.includes('embedded')) {
-  // Opened straight from disk, a browser won't let a page read image files. Use the embedded copies instead.
-  await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'assets/textures.js'; s.onload = res; s.onerror = () => rej(new Error('missing assets/textures.js')); document.head.append(s); });
-  imgs = await Promise.all(TEX.map(n => loadImg(window.RIDE_TEXTURES[n])));
+const imgs = await Promise.all(TEX.map(n => loadImg(`assets/${n}.jpg`))).catch(() => null);
+if (!imgs || !readable(imgs[0])) {
+  // Opened straight from disk, a browser won't let a page read image files, so the ride needs a web server.
+  $('loading').textContent = location.protocol === 'file:' ? 'Run a local web server to ride: see the README' : 'Could not load the textures';
+  throw new Error('ride: textures missing or unreadable');
 }
 const [imgAsphalt, imgAsphaltN, imgGrass, imgGrassN, imgRock, imgGravel] = imgs;
 const imgTex = (img, srgb) => {
@@ -1191,7 +1191,7 @@ function stepWeather(dt) {
 }
 document.querySelectorAll('#wx button').forEach(b => b.addEventListener('click', () => setWeather(b.dataset.w)));
 // Starry is still being worked on: it only appears on the local copy, not the hosted site.
-const LAB = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.protocol === 'file:';
+const LAB = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 if (!LAB) document.querySelector('#wx [data-w="starry"]')?.remove();
 if (!XMAS) document.querySelector('#wx [data-w="snow"]')?.remove(); else setWeather('snow', true);
 addEventListener('keydown', e => { const n = ['golden', 'overcast', 'rain', 'mist', LAB && 'starry'][+e.key - 1]; if (n) setWeather(n); });
