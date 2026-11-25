@@ -151,6 +151,8 @@ Each phase is its own branch and pull request, and leaves the ride working.
 - Add test-only URL options: `?at=<metres>` to place the rider, `?freeze` to stop the clock, wind sway and weather changes, and `?weather=<name>`.
 - Playwright takes screenshots in headless Chromium at fixed spots: the valley, valley Christmas, and Leckhampton (the climb, the vale, woods, buildings), each in two weathers.
 - Done: rendering uses SwiftShader (software GPU), which gives identical pixels on every run, so comparisons are exact (zero tolerance). With `?freeze` the page also stops drawing once a view is complete, because software rendering takes several seconds per frame. See `tests/visual/README.md`.
+- Cost: one view per course (three screenshots), about a minute in all. The first version had 18 views and took about 4.5 minutes, which was too slow for the value it added.
+- **Policy: screenshot tests check the renderer, not the courses.** They stay a fixed set (the valley, Christmas, and Leckhampton as the one survey course) and do not grow when courses are added. Each contributed course is checked by the data validator instead (phases 3 and 4), which needs no browser and takes milliseconds per course.
 - Commit the baseline screenshots. Later phases must match them unless a change is deliberate.
 
 ### Phase 2: split into modules
@@ -177,7 +179,7 @@ Each phase is its own branch and pull request, and leaves the ride working.
 
 - `docs/adding-a-course.md`: a step-by-step walkthrough with sources of free DTM data (Environment Agency, Scottish Remote Sensing Portal, USGS 3DEP, IGN RGE ALTI, swisstopo swissALTI3D and others), checking the result locally, and opening a pull request.
 - `docs/course-format.md`, `docs/architecture.md`, `CONTRIBUTING.md`, and pull request and issue templates (including a "new course" checklist covering licence and credits).
-- GitHub Actions on each pull request: ESLint and Prettier, `node --test`, ruff and pytest, and validating every course in `courses/`.
+- GitHub Actions on each pull request: ESLint and Prettier, `node --test`, ruff and pytest, and validating every course in `courses/` (data checks only, so the cost stays negligible however many courses there are).
 - Visual tests run locally at first. GPU rendering in CI (SwiftShader) differs from desktop GPUs; they can join CI later with a tolerance tuned for SwiftShader.
 
 ### Later
