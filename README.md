@@ -41,8 +41,17 @@ Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.y
 
 ## Layout
 
-- `index.html` – the whole ride.
+- `index.html` – the page: controls, display and the import map for Three.js.
+- `src/` – the ride, as ES modules. `main.js` loads the textures and course, then `scene.js` builds the scene, one module per part:
+  - `course/` – the road line and the ground
+  - `scenery/` – road surface, grass, trees, buildings, clouds and the rest
+  - `render/` – renderer, textures, sky and post-processing
+  - `devices/` – smart trainers (FTMS)
+  - `ui/` – controls, ride log and voice
+  - `physics.js` – the speed model; `weather.js`; `ride.js` – the frame loop
+- `styles/` – the page's CSS.
 - `assets/` – textures and course data.
+- `tests/` – unit tests (`unit/`) and screenshot tests (`visual/`).
 - `tools/` – scripts that build the Leckhampton course data.
 - `docs/` – plans and design notes.
 

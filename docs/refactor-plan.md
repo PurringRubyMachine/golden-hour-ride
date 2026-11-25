@@ -157,6 +157,8 @@ Each phase is its own branch and pull request, and leaves the ride working.
 
 ### Phase 2: split into modules
 
+Status: done. One deviation from the target layout: `state.js` (the ride state, `window.ride`) and `scene.js` (the build order) were added; the ride state did not fit any of the planned modules.
+
 - Move code into the target layout without changing behaviour. Modules run in import order, so keeping the order keeps the shared random stream identical, and the screenshots should match pixel for pixel.
 - Then, in a separate commit, give each part of the scene its own seeded stream. Scenery placement changes once, on purpose: retake the baseline and review it by eye. After that, editing one module no longer moves another module's trees.
 - Unit tests for `physics.js`, `devices/ftms.js` and `options.js`.
