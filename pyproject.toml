@@ -1,0 +1,10 @@
+# Python tooling for the course builder in tools/. The ride itself needs no Python beyond a local web server.
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+# The Leckhampton-only scripts are replaced by tools/coursebuilder (refactor plan, phase 4).
+extend-exclude = ["tools/build_leckhampton.py", "tools/build_leckhampton_osm.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]

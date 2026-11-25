@@ -10,10 +10,10 @@ Status: draft for review · 2026-11-25
 
 ## Decisions already made
 
-| Decision | Choice |
-|---|---|
-| Route input | GPX file |
-| DTM handling | GDAL, through `rasterio` and `pyproj` (pip wheels bundle GDAL, so no system install needed) |
+| Decision       | Choice                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| Route input    | GPX file                                                                                    |
+| DTM handling   | GDAL, through `rasterio` and `pyproj` (pip wheels bundle GDAL, so no system install needed) |
 | App build step | None. Native ES modules and the existing import map; `python3 -m http.server` keeps working |
 
 ## Out of scope
@@ -91,7 +91,11 @@ A course is a folder under `courses/<id>/`. The app fetches files; there are no 
   },
   "credits": [
     { "text": "Heights: Environment Agency LiDAR Composite DTM", "licence": "OGL-UK-3.0", "url": "https://..." },
-    { "text": "Route, buildings, woods and hedges © OpenStreetMap contributors", "licence": "ODbL-1.0", "url": "https://www.openstreetmap.org/copyright" }
+    {
+      "text": "Route, buildings, woods and hedges © OpenStreetMap contributors",
+      "licence": "ODbL-1.0",
+      "url": "https://www.openstreetmap.org/copyright"
+    }
   ]
 }
 ```
@@ -140,7 +144,7 @@ Each phase is its own branch and pull request, and leaves the ride working.
 - `LICENSE`: keep the original copyright line and add one for this fork. Credit the original author in the README.
 - Replace `deploy.sh` with a GitHub Pages workflow.
 - Remove `assets/textures.js` and `file://` support. The README already tells people to run a local server, and fetching course files needs one anyway.
-- Add a `package.json` for development tools only (ESLint, Prettier, Playwright), plus `.editorconfig`, and `ruff` for Python. The app still has no build step.
+- Add a `package.json` for development tools only (ESLint and Prettier; Playwright joins in phase 1, where it is first used), plus `.editorconfig`, and `ruff` settings for Python. The app still has no build step.
 
 ### Phase 1: safety net
 
@@ -183,13 +187,13 @@ Each phase is its own branch and pull request, and leaves the ride working.
 
 ## Risks
 
-| Risk | Mitigation |
-|---|---|
-| Splitting 1,660 dense lines breaks something subtle | Phase 1 screenshots; move code without changing it; pull requests small enough to review |
-| The one-time scenery reshuffle in phase 2 makes a view worse | Review the new baseline by eye; seeds can be tuned per stream |
-| GDAL install problems for contributors | rasterio wheels bundle GDAL for Linux, macOS and Windows; document a conda fallback |
-| Contributed courses with unclear data licences | `credits` required by the validator; licence checklist in the pull request template |
-| Large course files bloat the repo | Binary terrain is about 0.75 MB for a 6 km square, a quarter smaller than today's base64. The validator warns above 5 MB per course |
+| Risk                                                         | Mitigation                                                                                                                          |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Splitting 1,660 dense lines breaks something subtle          | Phase 1 screenshots; move code without changing it; pull requests small enough to review                                            |
+| The one-time scenery reshuffle in phase 2 makes a view worse | Review the new baseline by eye; seeds can be tuned per stream                                                                       |
+| GDAL install problems for contributors                       | rasterio wheels bundle GDAL for Linux, macOS and Windows; document a conda fallback                                                 |
+| Contributed courses with unclear data licences               | `credits` required by the validator; licence checklist in the pull request template                                                 |
+| Large course files bloat the repo                            | Binary terrain is about 0.75 MB for a 6 km square, a quarter smaller than today's base64. The validator warns above 5 MB per course |
 
 ## Open questions
 

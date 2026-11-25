@@ -1,0 +1,5 @@
+# Course data is generated.
+assets/
+package-lock.json
+# Formatted once it has been split into modules (refactor plan, phase 2), so the split itself is easy to review.
+index.html
