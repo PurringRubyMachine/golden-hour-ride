@@ -10,7 +10,7 @@ export default [
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.browser } },
   },
   {
-    files: ['eslint.config.js', 'tests/**/*.js'],
+    files: ['eslint.config.js', 'playwright.config.js', 'tests/**/*.js'],
     languageOptions: { globals: { ...globals.node } },
   },
 ];
