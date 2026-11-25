@@ -1,8 +1,10 @@
 # Golden Hour Ride
 
-A proof-of-concept indoor cycling ride that runs in the browser (Three.js, one `index.html`).
+An indoor cycling ride that runs in the browser (Three.js). Ride an invented mountain valley, or a real road built from LiDAR survey data.
 
-Live: https://golden-hour-ride.space.fast/ · Leckhampton loop: https://golden-hour-ride.space.fast/?course=leckhampton
+Live: https://purringrubymachine.github.io/golden-hour-ride/ · Leckhampton loop: https://purringrubymachine.github.io/golden-hour-ride/?course=leckhampton
+
+This project is a fork of [jamiemarsland/golden-hour-ride](https://github.com/jamiemarsland/golden-hour-ride) by Jamie Marsland, who wrote the original ride. The fork is being refactored so it is easier to maintain and so anyone with a LiDAR terrain model can add their own course: see [docs/refactor-plan.md](docs/refactor-plan.md).
 
 ## What's in it
 
@@ -15,21 +17,36 @@ Live: https://golden-hour-ride.space.fast/ · Leckhampton loop: https://golden-h
 
 ## Run it locally
 
+The ride needs a local web server; opening `index.html` straight from disk does not work, because browsers block pages from reading local files.
+
 ```bash
 python3 -m http.server 8791
 ```
 
 Then open http://localhost:8791/.
 
+## Development
+
+There is no build step: the browser loads the files as they are. Node.js is used only for development tools.
+
+```bash
+npm install          # ESLint and Prettier
+npm run lint
+npm run format:check
+```
+
+Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.yml`).
+
 ## Layout
 
 - `index.html` – the whole ride.
-- `assets/` – textures and course data. `textures.js` is an embedded copy of the textures, used only when the page is opened straight from disk.
+- `assets/` – textures and course data.
 - `tools/` – scripts that build the Leckhampton course data.
-- `deploy.sh` – publishes to Spacefast.
+- `docs/` – plans and design notes.
 
 ## Credits
 
+- Original ride: Jamie Marsland.
 - Textures: Poly Haven (CC0).
 - Terrain: Environment Agency LiDAR Composite DTM, Open Government Licence v3.0.
 - Roads, woodland and field boundaries: © OpenStreetMap contributors, ODbL.
