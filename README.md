@@ -31,9 +31,10 @@ There is no build step: the browser loads the files as they are. Node.js is used
 
 ```bash
 npm install          # ESLint, Prettier and Playwright
+npm test             # unit tests (Node's built-in test runner, under a second)
 npm run lint
 npm run format:check
-npm run test:visual  # screenshot tests: see tests/visual/README.md
+npm run test:visual  # screenshot tests, about a minute: see tests/visual/README.md
 ```
 
 Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.yml`).

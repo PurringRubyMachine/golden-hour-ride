@@ -5,7 +5,7 @@
 // ?scenery[=nobars]    drift along on its own with nothing on screen; nobars also hides the handlebars
 // ?hills=<0-100>       how much of each hill a smart trainer feels, for this visit
 // ?at, ?weather, ?freeze  test options: see tests/visual/README.md
-function parseOptions(search) {
+export function parseOptions(search) {
   const q = new URLSearchParams(search);
   return {
     course: q.get('course') === 'leckhampton' ? 'leckhampton' : 'valley',
@@ -17,7 +17,8 @@ function parseOptions(search) {
     freeze: q.has('freeze'),
   };
 }
-export const OPTIONS = parseOptions(location.search);
+// Outside a browser (in unit tests) there is no address bar, so every option takes its default.
+export const OPTIONS = parseOptions(globalThis.location?.search ?? '');
 
 // ?theme=christmas: the same valley under snow at dusk, with lights in the trees and a few chalets
 export const XMAS = OPTIONS.xmas;
