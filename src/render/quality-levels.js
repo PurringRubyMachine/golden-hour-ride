@@ -11,7 +11,9 @@ export const LEVELS = ['low', 'medium', 'high'];
 // same for whole trees; beyond it the woods carry on as the ground's canopy colour. treeDensity, vergeDensity: the
 // share of the trees, and of the verge grass, that is drawn.
 // terrainNear, terrainMid: the ground is drawn in full out to terrainNear metres, at half detail out to terrainMid, and
-// at a quarter beyond.
+// at a quarter beyond. photoFrom, photoTo: on a course with a photo of the ground from above, the photo takes over the
+// ground's colour from photoFrom metres away and has it all by photoTo; photoSize: how many pixels across of it are
+// loaded (a 4096-pixel photo takes about 90 MB of graphics memory, a 2048 one a quarter of that).
 export const SETTINGS = {
   low: {
     scale: 0.5,
@@ -27,6 +29,9 @@ export const SETTINGS = {
     trunks: 250,
     terrainNear: 800,
     terrainMid: 2000,
+    photoFrom: 60,
+    photoTo: 200,
+    photoSize: 2048,
   },
   medium: {
     scale: 0.7,
@@ -42,6 +47,9 @@ export const SETTINGS = {
     trunks: 400,
     terrainNear: 1200,
     terrainMid: 3000,
+    photoFrom: 80,
+    photoTo: 250,
+    photoSize: 4096,
   },
   high: {
     scale: 1,
@@ -57,6 +65,9 @@ export const SETTINGS = {
     trunks: Infinity,
     terrainNear: 1500,
     terrainMid: 3500,
+    photoFrom: 80,
+    photoTo: 250,
+    photoSize: 4096,
   },
 };
 

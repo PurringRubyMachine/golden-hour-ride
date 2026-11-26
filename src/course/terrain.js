@@ -5,10 +5,13 @@ import { uSunAmt } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { imgGrass, imgGrassN, imgRock, imgTex } from '../render/textures.js';
 import { sunDir, sunFlat } from '../render/sky.js';
-import { XMAS, demH, real } from './course.js';
+import { XMAS, course, demH, dir, real } from './course.js';
 import { nearRoad } from './road.js';
 import { tileIndex } from './terrain-lod.js';
-import { onQuality } from '../render/quality.js';
+import { onQuality, quality } from '../render/quality.js';
+import { FREEZE } from '../options.js';
+import { MAX_ANISO } from '../render/renderer.js';
+import { SETTINGS } from '../render/quality-levels.js';
 
 function baseH(x, z) {
   if (real) return demH(x, z);
@@ -172,6 +175,63 @@ tGeo.computeVertexNormals();
   tGeo.setAttribute('aWood', new THREE.BufferAttribute(wood, 1));
 }
 const rockMap = imgTex(imgRock, true);
+
+// The ground from above (course.imagery, a photo covering the terrain square, north at the top): it takes over the
+// ground's colour with distance, where the colour rules can't show fields, lakes and towns, and tints the ground near
+// the rider a little, so a field that is yellow from afar isn't bright green underfoot. It loads after the ride starts
+// and fades in. Courses without one draw the ground exactly as before (the shader has no photo code at all).
+const PHOTO = !!course.imagery;
+const uPhoto = { value: null },
+  uPhotoAmt = { value: 0 }, // 0 until the photo arrives, then fading up to 1
+  uPhotoNear = { value: new THREE.Vector2(200, 450) }, // from, to: metres over which the photo takes over
+  uPhotoMean = { value: new THREE.Vector3(1, 1, 1) }, // its average colour, for the tint near the rider
+  uPhotoGain = { value: 1 }; // brings its brightness to the ground's
+let photoState = PHOTO ? 'loading' : 'none',
+  photoAt = 0;
+onQuality((q) => uPhotoNear.value.set(q.photoFrom, q.photoTo));
+const PHOTO_FADE = 1500; // ms
+const GROUND_LUM = 0.15; // the drawn ground's typical brightness (linear), which the photo's average is brought to
+const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+if (PHOTO) {
+  const img = new Image();
+  img.onload = () => {
+    // a smaller copy where graphics memory is tight (photoSize), and the average colour from a tiny one
+    const size = Math.min(img.width, SETTINGS[quality.level]?.photoSize ?? 4096);
+    let src = img;
+    if (size < img.width) {
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      c.getContext('2d').drawImage(img, 0, 0, size, size);
+      src = c;
+    }
+    const tiny = document.createElement('canvas');
+    tiny.width = tiny.height = 32;
+    const g = tiny.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0, 32, 32);
+    const px = g.getImageData(0, 0, 32, 32).data,
+      mean = [0, 0, 0];
+    for (let i = 0; i < px.length; i += 4) for (let b = 0; b < 3; b++) mean[b] += toLinear(px[i + b] / 255) / 1024;
+    uPhotoMean.value.set(...mean);
+    const lum = 0.2126 * mean[0] + 0.7152 * mean[1] + 0.0722 * mean[2];
+    uPhotoGain.value = Math.min(2, Math.max(0.7, GROUND_LUM / Math.max(lum, 1e-3)));
+    const t = new THREE.Texture(src);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.flipY = false; // row 0 is the north edge, at v = 0
+    t.anisotropy = Math.min(8, MAX_ANISO);
+    t.needsUpdate = true;
+    uPhoto.value = t;
+    photoState = 'fading';
+    photoAt = performance.now();
+  };
+  img.onerror = () => {
+    console.warn(`ride: could not load ${dir + course.imagery.file}; the ground is drawn without it`);
+    photoState = 'none';
+  };
+  img.src = dir + course.imagery.file;
+}
+// for the frame loop: 1 while the photo is still loading or fading in (so ?freeze waits for it), else 0
+export const photoPending = () => (photoState === 'loading' || photoState === 'fading' ? 1 : 0);
+
 export const terrainMat = new THREE.MeshStandardMaterial({
   vertexColors: true,
   map: imgTex(imgGrass, true),
@@ -182,12 +242,15 @@ terrainMat.onBeforeCompile = (s) => {
   // grass on the flats, rock on the steeps, snow up high; a second, larger sample hides the tiling
   s.uniforms.uRock = { value: rockMap };
   s.uniforms.uSunAmt = uSunAmt;
+  Object.assign(s.uniforms, { uPhoto, uPhotoAmt, uPhotoNear, uPhotoMean, uPhotoGain });
   s.vertexShader =
     'attribute vec2 aMix; attribute float aShade, aWood; varying vec2 vMix; varying float vShade, vWood;\n' +
     s.vertexShader.replace(
       '#include <begin_vertex>',
-      '#include <begin_vertex>\n vMix = aMix; vShade = aShade; vWood = aWood;',
+      '#include <begin_vertex>\n vMix = aMix; vShade = aShade; vWood = aWood;' +
+        (PHOTO ? `\n vPhotoUv = (position.xz + ${(TS / 2).toFixed(1)}) / ${TS.toFixed(1)};` : ''),
     );
+  if (PHOTO) s.vertexShader = 'varying vec2 vPhotoUv;\n' + s.vertexShader;
   s.fragmentShader =
     'uniform sampler2D uRock; uniform float uSunAmt; varying vec2 vMix; varying float vShade, vWood;\n' +
     s.fragmentShader.replace(
@@ -204,6 +267,20 @@ terrainMat.onBeforeCompile = (s) => {
     float canopy = vWood * smoothstep(150., 450., length(vViewPosition));                 // woodland, seen from afar
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.055, 0.085, 0.035) * (0.7 + l3 * 0.9 + l2 * 0.5), canopy * 0.9);`,
     );
+  if (PHOTO)
+    s.fragmentShader =
+      'uniform sampler2D uPhoto; uniform float uPhotoAmt, uPhotoGain; uniform vec2 uPhotoNear; uniform vec3 uPhotoMean;\n' +
+      'varying vec2 vPhotoUv;\n' +
+      s.fragmentShader.replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+    vec3 ph = texture2D(uPhoto, vPhotoUv).rgb;
+    float far = uPhotoAmt * smoothstep(uPhotoNear.x, uPhotoNear.y, length(vViewPosition));
+    vec3 near = diffuseColor.rgb * mix(vec3(1.), clamp(ph / uPhotoMean, 0.6, 1.6), 0.35 * uPhotoAmt);  // the photo's tint
+    float pl = dot(ph, vec3(0.2126, 0.7152, 0.0722));
+    vec3 pc = mix(vec3(pl), ph, 0.7) * uPhotoGain * mix(1., vShade, uSunAmt);   // less vivid; the evening shadows on it
+    diffuseColor.rgb = mix(near, pc, far * 0.8);                               // the ground's own colour still shows a little, so it sits in the scene`,
+      );
 };
 // The ground is drawn in tiles sharing one set of vertices (8 × 8, or smaller on a large terrain: at most 100 cells
 // across), so the camera, and the sun's shadow (which covers only the ground round the rider), can each skip the
@@ -214,6 +291,10 @@ const STEPS = [1, 2, 4];
 let detail = [Infinity, Infinity]; // full detail out to detail[0] metres, half to detail[1], quarter beyond
 onQuality((q) => (detail = [q.terrainNear, q.terrainMid]));
 export function terrainDetail(cam) {
+  if (photoState === 'fading') {
+    uPhotoAmt.value = FREEZE ? 1 : Math.min(1, (performance.now() - photoAt) / PHOTO_FADE);
+    if (uPhotoAmt.value === 1) photoState = 'done';
+  }
   for (const t of terrainTiles) {
     const d = t.box.distanceToPoint(cam),
       level = d < detail[0] ? 0 : d < detail[1] ? 1 : 2;

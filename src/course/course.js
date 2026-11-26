@@ -30,7 +30,7 @@ const check = (problems) => problems.length && fail(problems);
 // Every course, for the menu and the ride log: [{ id, name, shortName, lengthKm, climbM }]
 export const courses = await get('courses/index.json', 'json');
 const id = courses.some((c) => c.id === OPTIONS.course) ? OPTIONS.course : 'valley';
-const dir = `courses/${id}/`;
+export const dir = `courses/${id}/`; // the course's folder, for files loaded later (its photo)
 
 export const course = await get(dir + 'course.json', 'json');
 check(validateCourse(course, id));

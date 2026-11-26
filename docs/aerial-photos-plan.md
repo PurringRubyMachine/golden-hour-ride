@@ -78,3 +78,12 @@ Every source goes into `docs/adding-a-course.md`'s table of sources, next to the
 - `build --imagery` writes `ground.jpg`. Gatineau's is 4096 pixels across (3.3 m each), 2.4 MB at JPEG quality 76; it lines up with the road along every parkway.
 - **Colour.** Stretching each colour on its own, as planned ("white-balance"), turned the forest an unreal green and the lakes purple. The builder now stretches the brightness, red, green and blue together: dull photos are brought to a common range, and the colours stay true. Toning the summer green to the evening light is left to the ride (step 2).
 - `build.json` records the photo's file and the scenes it was made from.
+
+**2. The ride** (this pull request):
+
+- The ground's shader takes its colour from the photo with distance, a little less vivid than the photo and brought to the ground's usual brightness, with the evening's shadows on it; a fifth of the ground's own colour still shows, so it sits in the scene. Nearer, the photo tints the ground lightly. The photo loads after the ride starts and fades in over 1.5 s; with `?freeze` the screenshot waits for it.
+- **Distances.** All photo from about 250 m (High and Medium) or 200 m (Low), starting at 60–80 m, closer than planned (400 and 250 m): on Gatineau almost nothing beyond 450 m can be seen past the trees and the haze, so at the planned distances the photo hardly showed.
+- **Memory.** A 4096-pixel photo takes about 90 MB of graphics memory with its mipmaps, not the 21 MB the plan said; Low loads a 2048-pixel copy (22 MB).
+- **What it looks like.** Tried with Sentinel-2 photos (not committed). Gatineau: a modest change, since its road mostly runs between trees; where it opens out (41 km) the far ridge shows its fields and a quarry. Leckhampton's open vale shows its real field pattern clearly, but the July 2025 scene is mostly harvested fields, so the vale turns brown: a June scene (`--months 6-6`) may suit it better, to try in step 4.
+- **Frame rate**: unchanged. Intel UHD 630 at Low: Gatineau 57 fps with the photo and without; Leckhampton 60 both. RTX 2060 at High: Gatineau 59.5 fps with, 56.3 without (later runs throttled by heat either way). The occasional freeze of over a second (see the course map plan) turned up in runs without the photo too.
+- Courses without a photo draw exactly as before (their shader has none of the photo code): the screenshot tests are unchanged.
