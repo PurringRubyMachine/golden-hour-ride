@@ -215,26 +215,21 @@ const rnd = makeRandom('trees');
     if (!real && y > 240) continue;
     spots.push([x, y, z]);
   }
-  const fol = new THREE.InstancedMesh(folGeo, folMat, spots.length);
-  const trunk = new THREE.InstancedMesh(
-    trunkGeo,
-    new THREE.MeshStandardMaterial({ color: 0x33251a, roughness: 1 }),
-    spots.length,
-  );
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x33251a, roughness: 1 });
   const m4 = new THREE.Matrix4(),
     q = new THREE.Quaternion(),
     up = new V3(0, 1, 0),
     sc = new V3(),
     ps = new V3(),
     col = new THREE.Color();
+  const mats = new Float32Array(spots.length * 16),
+    cols = new Float32Array(spots.length * 3);
   spots.forEach(([x, y, z], i) => {
     const s = 0.9 + rnd() * 0.9;
     ps.set(x, y - 0.3, z);
     q.setFromAxisAngle(up, rnd() * 6.283);
     sc.set(s * (0.85 + rnd() * 0.3), s, s * (0.85 + rnd() * 0.3));
-    m4.compose(ps, q, sc);
-    fol.setMatrixAt(i, m4);
-    trunk.setMatrixAt(i, m4);
+    m4.compose(ps, q, sc).toArray(mats, i * 16);
     if (XMAS && xl.p.length < 110000 * 3) {
       // fairy lights wound round the trees beside the road
       const nr = nearRoad(x, z);
@@ -251,12 +246,31 @@ const rnd = makeRandom('trees');
         }
       }
     }
-    fol.setColorAt(i, col.setRGB(0.7 + rnd() * 0.3, 0.75 + rnd() * 0.25, 0.6 + rnd() * 0.3));
+    col.setRGB(0.7 + rnd() * 0.3, 0.75 + rnd() * 0.25, 0.6 + rnd() * 0.3).toArray(cols, i * 3);
   });
-  for (const m of [fol, trunk]) {
-    m.castShadow = true;
-    m.receiveShadow = true;
-    m.frustumCulled = false;
-    scene.add(m);
+  // Drawn in 250 m tiles, so the camera, and the sun's shadow (which covers only the ground round the rider), can each
+  // skip the tiles they can't see. The trees were placed above in the same order as ever; only now are they sorted.
+  const TILE = 250,
+    tiles = new Map();
+  spots.forEach(([x, , z], i) => {
+    const key = Math.floor(x / TILE) * 4096 + Math.floor(z / TILE);
+    if (!tiles.has(key)) tiles.set(key, []);
+    tiles.get(key).push(i);
+  });
+  for (const list of tiles.values()) {
+    const fol = new THREE.InstancedMesh(folGeo, folMat, list.length),
+      trunk = new THREE.InstancedMesh(trunkGeo, trunkMat, list.length);
+    list.forEach((i, k) => {
+      m4.fromArray(mats, i * 16);
+      fol.setMatrixAt(k, m4);
+      trunk.setMatrixAt(k, m4);
+      fol.setColorAt(k, col.fromArray(cols, i * 3));
+    });
+    for (const m of [fol, trunk]) {
+      m.computeBoundingSphere();
+      m.castShadow = true;
+      m.receiveShadow = true;
+      scene.add(m);
+    }
   }
 }

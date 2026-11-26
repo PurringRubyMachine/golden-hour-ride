@@ -86,7 +86,7 @@ export const chunks = [];
       mesh.setMatrixAt(k, m4.compose(ps, q, sc));
       mesh.setColorAt(k, col.setHSL(0.19 + rnd() * 0.07, 0.25 + rnd() * 0.25, 0.5 + rnd() * 0.25));
     }
-    mesh.frustumCulled = false;
+    mesh.computeBoundingSphere(); // a patch is 60 m of verge: skipped when it's out of view
     mesh.receiveShadow = true;
     scene.add(mesh);
     return mesh;
