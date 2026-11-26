@@ -7,6 +7,7 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { uPx } from '../uniforms.js';
 import { camera, renderer, scene } from './renderer.js';
+import { onQuality } from './quality.js';
 import { hazeLum } from '../scenery/clouds.js';
 
 export const composer = new EffectComposer(
@@ -14,7 +15,7 @@ export const composer = new EffectComposer(
   new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 }),
 );
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.6, 3.5);
+export const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.6, 3.5);
 composer.addPass(bloom);
 export const rays = new ShaderPass({
   // light shafts: smear the bright sky outward from the sun
@@ -104,11 +105,21 @@ export const lens = new ShaderPass({
     }`,
 });
 composer.addPass(lens);
+onQuality((s) => {
+  composer.setPixelRatio(renderer.getPixelRatio());
+  bloom.enabled = s.bloom;
+  rays.enabled = s.rays;
+  for (const rt of [composer.renderTarget1, composer.renderTarget2])
+    if (rt.samples !== s.msaa) {
+      rt.samples = s.msaa;
+      rt.dispose(); // made again with the new anti-aliasing
+    }
+});
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
   composer.setSize(innerWidth, innerHeight);
   lens.uniforms.uAspect.value = innerWidth / innerHeight;
-  uPx.value = (innerHeight * Math.min(devicePixelRatio, 2)) / (2 * Math.tan(0.6));
+  uPx.value = (innerHeight * renderer.getPixelRatio()) / (2 * Math.tan(0.6));
 });

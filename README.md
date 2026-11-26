@@ -13,6 +13,7 @@ This project is a fork of [jamiemarsland/golden-hour-ride](https://github.com/ja
 - Skip forward and back 250 m with the arrow keys.
 - Hide everything on screen for a clean view: the Hide info button, the H key, or say "hide". Press H, click, or say "show" to bring it back.
 - Power from a slider, or from a Bluetooth trainer (Chrome or Edge; on Linux, first turn on _Experimental Web Platform features_ at `chrome://flags` — the trainer button explains if Bluetooth is missing). If the trainer supports resistance control (FTMS), the ride also sends it the road gradient, so climbs feel harder; the button shows "Trainer: power and gradient" or "Trainer: power only". The trainer feels half the road gradient by default; the − and + buttons beside the trainer button change that in steps of 10 %, from off to the full gradient, and the choice is kept in the browser (`?hills=` sets it for one visit). With voice on, say "easier" or "harder" to move it by 20 %, "flat" for off, or "full" for all of it. The last trainer is remembered: the button reads "Reconnect trainer" and rejoins it without the browser's device list where Chrome allows that, and a dropped connection is retried automatically.
+- Quality: Auto, Low, Medium or High (the Quality button, kept in the browser; `?quality=` for one visit). Auto starts at Medium on built-in graphics and High otherwise, and steps down if the ride isn't smooth; it remembers where it settled. Low runs at 60 fps on a laptop's built-in Intel graphics.
 - Descents count half in the speed model and the rider brakes above 54 km/h, so downhill speed stays sensible.
 
 ## Run it locally
@@ -69,9 +70,9 @@ For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Envi
 - `styles/` – the page's CSS.
 - `courses/` – one folder per course; `index.json` lists them for the menu. The format is described in [docs/course-format.md](docs/course-format.md).
 - `assets/` – textures.
-- `tests/` – unit tests (`unit/`) and screenshot tests (`visual/`).
+- `tests/` – unit tests (`unit/`), screenshot tests (`visual/`) and frame-rate measurements (`perf/`).
 - `tools/coursebuilder/` – the course builder: a GPX route and LiDAR DTM files in, a course folder out (see below).
-- `docs/` – [architecture](docs/architecture.md), [course format](docs/course-format.md), [adding a course](docs/adding-a-course.md), and the [refactor plan](docs/refactor-plan.md).
+- `docs/` – [architecture](docs/architecture.md), [course format](docs/course-format.md), [adding a course](docs/adding-a-course.md), the [refactor plan](docs/refactor-plan.md) and the [performance plan](docs/performance-plan.md).
 
 Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 

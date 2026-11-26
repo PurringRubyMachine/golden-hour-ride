@@ -8,6 +8,7 @@ test('defaults: the valley, no theme, no test options', () => {
   assert.equal(o.xmas, false);
   assert.equal(o.scenery, null);
   assert.equal(o.hills, null);
+  assert.equal(o.quality, null);
   assert.ok(Number.isNaN(o.at));
   assert.equal(o.weather, null);
   assert.equal(o.freeze, false);
@@ -38,4 +39,9 @@ test('test options', () => {
 
 test('the hills value is passed on as written, for the trainer code to check', () => {
   assert.equal(parseOptions('?hills=70').hills, '70');
+});
+
+test('quality: one of the four levels, or nothing', () => {
+  for (const q of ['auto', 'low', 'medium', 'high']) assert.equal(parseOptions('?quality=' + q).quality, q);
+  assert.equal(parseOptions('?quality=ultra').quality, null);
 });

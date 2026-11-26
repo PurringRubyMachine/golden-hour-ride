@@ -16,6 +16,8 @@ import { st } from './state.js';
 import { setClean } from './ui/controls.js';
 import { audio } from './audio.js';
 import { XMAS } from './course/course.js';
+import { onQuality, quality, qualityFrame } from './render/quality.js';
+import { nearTrees } from './scenery/trees.js';
 
 const V3 = THREE.Vector3;
 
@@ -57,8 +59,16 @@ if (SCENERY !== null) {
 // count what each frame draws across all its passes (shadows, scene, post-processing), for window.ride.stats
 renderer.info.autoReset = false;
 
+// how far the verge grass is drawn: patches are built within this distance and dropped 100 m beyond it
+let verge = 230;
+onQuality((q) => (verge = q.verge));
+let last = performance.now();
+
 function tick() {
   renderer.info.reset();
+  const now = performance.now();
+  qualityFrame(now - last, now);
+  last = now;
   const dt = FREEZE ? 0 : Math.min(clock.getDelta(), 0.05);
   uTime.value += dt;
 
@@ -113,20 +123,21 @@ function tick() {
   for (const c of chunks) {
     const d2 = c.c.distanceToSquared(camera.position);
     // one patch per frame keeps the ride smooth; with ?freeze, build them all at once (same order, so the same grass)
-    if (d2 < 230 * 230) {
+    if (d2 < verge * verge) {
       if (!c.mesh) {
         if (!built || FREEZE) {
           c.mesh = c.build();
           built = true;
         } else pending++;
       }
-    } else if (c.mesh && d2 > 330 * 330) {
+    } else if (c.mesh && d2 > (verge + 100) ** 2) {
       scene.remove(c.mesh);
       c.mesh.dispose();
       c.mesh = null;
     }
   }
   st.pending = pending;
+  nearTrees(camera.position);
 
   sunNdc.copy(camera.position).addScaledVector(sunDir, 1000).project(camera);
   rays.uniforms.uSunUv.value.set(sunNdc.x * 0.5 + 0.5, sunNdc.y * 0.5 + 0.5);
@@ -156,6 +167,7 @@ function tick() {
   composer.render();
   st.stats.calls = renderer.info.render.calls;
   st.stats.triangles = renderer.info.render.triangles;
+  st.stats.quality = quality.level;
   st.frame++;
   if (first) {
     first = false;

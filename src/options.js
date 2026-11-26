@@ -4,6 +4,7 @@
 // ?theme=christmas     the valley under snow at dusk (valley only: see XMAS in course/course.js)
 // ?scenery[=nobars]    drift along on its own with nothing on screen; nobars also hides the handlebars
 // ?hills=<0-100>       how much of each hill a smart trainer feels, for this visit
+// ?quality=<level>     auto, low, medium or high, for this visit (see render/quality.js)
 // ?at, ?weather, ?freeze  test options: see tests/visual/README.md
 export function parseOptions(search) {
   const q = new URLSearchParams(search);
@@ -12,6 +13,7 @@ export function parseOptions(search) {
     xmas: q.get('theme') === 'christmas',
     scenery: q.get('scenery'),
     hills: q.get('hills'),
+    quality: ['auto', 'low', 'medium', 'high'].includes(q.get('quality')) ? q.get('quality') : null,
     at: parseFloat(q.get('at')),
     weather: q.has('weather') ? q.get('weather') : null,
     freeze: q.has('freeze'),

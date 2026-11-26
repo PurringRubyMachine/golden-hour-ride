@@ -9,9 +9,19 @@ import { XMAS, real } from '../course/course.js';
 import { nearRoad } from '../course/road.js';
 import { TS, meshH } from '../course/terrain.js';
 import { XL_COLS, chalets, xl } from './chalets.js';
+import { onQuality } from '../render/quality.js';
 
 const V3 = THREE.Vector3;
 const rnd = makeRandom('trees');
+
+// trunk tiles, and how far away trunks are drawn (quality.js): see nearTrees
+const trunkTiles = [];
+let trunkFar = Infinity;
+onQuality((q) => (trunkFar = q.trunks));
+// every frame, from the ride loop: show the trunk tiles within trunkFar of the camera
+export function nearTrees(cam) {
+  for (const t of trunkTiles) t.visible = t.boundingSphere.center.distanceTo(cam) - t.boundingSphere.radius < trunkFar;
+}
 
 {
   const [bc, bg] = canvas2d(256, 256);
@@ -272,5 +282,6 @@ const rnd = makeRandom('trees');
       m.receiveShadow = true;
       scene.add(m);
     }
+    trunkTiles.push(trunk);
   }
 }

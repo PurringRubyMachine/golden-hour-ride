@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { canvas2d } from '../util/dom.js';
 import { makeRandom } from '../util/random.js';
-import { uTime } from '../uniforms.js';
+import { uPx, uTime } from '../uniforms.js';
 import { MAX_ANISO, scene } from '../render/renderer.js';
 import { XMAS, st0 } from '../course/course.js';
 import { N, P, R, T } from '../course/road.js';
@@ -177,7 +177,7 @@ if (XMAS) {
       depthWrite: false,
       uniforms: {
         uTime,
-        uPx: { value: (innerHeight * Math.min(devicePixelRatio, 2)) / (2 * Math.tan(0.6)) },
+        uPx,
         uCol: { value: new V3(0.5, 0.52, 0.6) },
       },
       vertexShader: `uniform float uTime, uPx; attribute float aPh; varying float vA;

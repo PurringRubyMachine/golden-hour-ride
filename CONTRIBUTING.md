@@ -23,9 +23,10 @@ npm run lint && npm run format:check && npm test
 .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/pytest
 ```
 
-Two more run only on your machine:
+Three more run only on your machine:
 
 - **Screenshot tests** (`npm run test:visual`, about a minute, after `npx playwright install chromium` once). Run them for any change to the ride's code. They compare three views pixel for pixel; a change that is meant to alter the picture updates the baselines (`npm run test:visual:update`) in the same pull request, and says why. See [tests/visual/README.md](tests/visual/README.md).
+- **Frame-rate measurements** (`node tests/perf/measure.js`, a minute or two). Run them for changes to scenery or rendering, on built-in graphics if you can, at each quality level you touch (`--query quality=low`), and give the numbers before and after in the pull request. See [tests/perf/README.md](tests/perf/README.md).
 - **The Leckhampton acceptance test** (`COURSEBUILDER_NETWORK=1 .venv/bin/pytest tests/python/test_leckhampton.py`). Run it for changes to how the builder computes heights. It downloads about 50 MB of LiDAR the first time.
 
 ## Code

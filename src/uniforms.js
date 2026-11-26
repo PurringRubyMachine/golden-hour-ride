@@ -7,4 +7,4 @@ export const uTime = { value: 0 },
   uMeadow = { value: new THREE.Vector2() },
   uSunAmt = { value: 1 };
 export const uRain = { value: 0 }; // how wet: 0 dry, 1 raining
-export const uPx = { value: (innerHeight * Math.min(devicePixelRatio, 2)) / (2 * Math.tan(0.6)) }; // metres to pixels at 1 m
+export const uPx = { value: innerHeight / (2 * Math.tan(0.6)) }; // metres to drawn pixels at 1 m (quality.js keeps it right)
