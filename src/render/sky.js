@@ -1,8 +1,8 @@
 // Sky, sun, haze and the light they cast.
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
-import { XMAS } from '../options.js';
 import { renderer, scene } from './renderer.js';
+import { XMAS } from '../course/course.js';
 
 const V3 = THREE.Vector3;
 

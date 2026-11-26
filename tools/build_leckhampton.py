@@ -1,4 +1,5 @@
 """Builds assets/leckhampton.js: the Leckhampton Hill loop as a road line plus a terrain height grid.
+Old format: afterwards run  python3 tools/convert_legacy_course.py leckhampton  to update courses/leckhampton/.
 
 Route: OpenStreetMap routing service (car profile) through the loop's waypoints.
 Heights: Environment Agency LiDAR Composite DTM (1 m survey), Open Government Licence.

@@ -2,10 +2,9 @@
 import * as THREE from 'three';
 import { canvas2d } from '../util/dom.js';
 import { makeRandom } from '../util/random.js';
-import { XMAS } from '../options.js';
 import { uTime } from '../uniforms.js';
 import { MAX_ANISO, scene } from '../render/renderer.js';
-import { st0 } from '../course/course.js';
+import { XMAS, st0 } from '../course/course.js';
 import { N, P, R, T } from '../course/road.js';
 import { meshH } from '../course/terrain.js';
 

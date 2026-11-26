@@ -5,7 +5,7 @@ import { canvas2d } from '../util/dom.js';
 import { makeRandom } from '../util/random.js';
 import { smooth } from '../util/noise.js';
 import { scene } from '../render/renderer.js';
-import { demH, real, st0 } from '../course/course.js';
+import { course, demH, real, st0 } from '../course/course.js';
 import { N, P, R, T, nearRoad } from '../course/road.js';
 import { TC, TG, TS, TW, meshH, tCol, tPos } from '../course/terrain.js';
 
@@ -13,7 +13,10 @@ const V3 = THREE.Vector3;
 const rnd = makeRandom('pastoral');
 
 export const stamps = []; // patches where the meadow is grazed short or cut to stubble
-if (real) {
+const style = course.scenery?.style,
+  options = course.scenery?.options ?? {};
+if (real && style === 'pastoral-1800s') {
+  const { sheepAbove = Infinity, stooksBelow = -Infinity } = options;
   const m4 = new THREE.Matrix4(),
     q = new THREE.Quaternion(),
     up = new V3(0, 1, 0),
@@ -63,7 +66,7 @@ if (real) {
   const sheep = [];
   for (let n = 0; n < 5000 && stamps.length < 46; n++) {
     const i = Math.floor(rnd() * N);
-    if (P[i].y < 175) continue;
+    if (P[i].y < sheepAbove) continue;
     const off = (rnd() < 0.5 ? -1 : 1) * (30 + rnd() * 65),
       x = P[i].x + R[i].x * off,
       z = P[i].z + R[i].z * off;
@@ -120,7 +123,7 @@ if (real) {
   let fields = 0;
   for (let n = 0; n < 5000 && fields < 26; n++) {
     const i = Math.floor(rnd() * N);
-    if (P[i].y > 150) continue;
+    if (P[i].y > stooksBelow) continue;
     const off = (rnd() < 0.5 ? -1 : 1) * (48 + rnd() * 50),
       x = P[i].x + R[i].x * off,
       z = P[i].z + R[i].z * off;

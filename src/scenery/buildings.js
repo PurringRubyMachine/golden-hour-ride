@@ -10,7 +10,7 @@ import { meshH } from '../course/terrain.js';
 const V3 = THREE.Vector3;
 const rnd = makeRandom('buildings');
 
-if (real && real.osm.buildings.length) {
+if (real && real.buildings.length) {
   const m4 = new THREE.Matrix4(),
     q = new THREE.Quaternion(),
     up = new V3(0, 1, 0),
@@ -65,7 +65,7 @@ if (real && real.osm.buildings.length) {
     ),
   );
   hip.computeVertexNormals();
-  const B = real.osm.buildings,
+  const B = real.buildings,
     box = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
   const roofMat = new THREE.MeshStandardMaterial({ roughness: 0.8 });
   const walls = new THREE.InstancedMesh(box, wallMat, B.length),
@@ -143,7 +143,7 @@ if (real && real.osm.buildings.length) {
     t.colorSpace = THREE.SRGBColorSpace;
     return t;
   };
-  const L = real.osm.lines,
+  const L = real.lines,
     kinds = [
       new THREE.InstancedMesh(box, new THREE.MeshStandardMaterial({ map: tex(hc), roughness: 1 }), L.length),
       new THREE.InstancedMesh(box, new THREE.MeshStandardMaterial({ map: tex(sc2), roughness: 1 }), L.length),

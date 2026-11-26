@@ -28,8 +28,8 @@ jobs:
         run: |
           mkdir -p _site/assets
           cp index.html _site/
-          cp -r src styles _site/
-          cp assets/*.jpg assets/*.js _site/assets/
+          cp -r src styles courses _site/
+          cp assets/*.jpg _site/assets/
 
       - uses: actions/configure-pages@v5
 

@@ -1,12 +1,11 @@
 // The ground: heights, colours, rock and snow.
 import * as THREE from 'three';
 import { fbm, ridged, smooth } from '../util/noise.js';
-import { XMAS } from '../options.js';
 import { uSunAmt } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { imgGrass, imgGrassN, imgRock, imgTex } from '../render/textures.js';
 import { sunDir, sunFlat } from '../render/sky.js';
-import { demH, real } from './course.js';
+import { XMAS, demH, real } from './course.js';
 import { nearRoad } from './road.js';
 
 function baseH(x, z) {

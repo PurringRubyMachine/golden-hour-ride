@@ -3,10 +3,9 @@ import * as THREE from 'three';
 import { canvas2d } from '../util/dom.js';
 import { makeRandom } from '../util/random.js';
 import { fbm } from '../util/noise.js';
-import { XMAS } from '../options.js';
 import { uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
-import { real } from '../course/course.js';
+import { XMAS, real } from '../course/course.js';
 import { nearRoad } from '../course/road.js';
 import { TS, meshH } from '../course/terrain.js';
 import { XL_COLS, chalets, xl } from './chalets.js';
@@ -192,10 +191,10 @@ const rnd = makeRandom('trees');
   const built = new Set(),
     cellKey = (x, z) => Math.floor(x / 10) * 4096 + Math.floor(z / 10);
   if (real) {
-    for (const [bx, bz, w] of real.osm.buildings)
+    for (const [bx, bz, w] of real.buildings)
       for (let dx = -w / 2 - 4; dx <= w / 2 + 4; dx += 10)
         for (let dz = -w / 2 - 4; dz <= w / 2 + 4; dz += 10) built.add(cellKey(bx + dx, bz + dz));
-    for (const [x, z] of real.osm.trees) {
+    for (const [x, z] of real.trees) {
       const nr = nearRoad(x, z);
       if (!nr || nr.d > 5.5) spots.push([x, meshH(x, z), z]);
     } // mapped street and field trees

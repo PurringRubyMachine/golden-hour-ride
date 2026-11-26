@@ -3,11 +3,11 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { canvas2d } from '../util/dom.js';
 import { makeRandom } from '../util/random.js';
-import { XMAS } from '../options.js';
 import { uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { N, P, R, T } from '../course/road.js';
 import { meshH } from '../course/terrain.js';
+import { XMAS } from '../course/course.js';
 
 const V3 = THREE.Vector3;
 const rnd = makeRandom('grass');

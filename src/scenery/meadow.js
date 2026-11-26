@@ -2,13 +2,13 @@
 import * as THREE from 'three';
 import { makeRandom } from '../util/random.js';
 import { fbm, smooth } from '../util/noise.js';
-import { XMAS } from '../options.js';
 import { uMeadow, uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { nearRoad } from '../course/road.js';
 import { H, TC, TG, TS, TW, tGeo, tPos } from '../course/terrain.js';
 import { grassMat, tuftGeo } from './grass.js';
 import { stamps } from './pastoral.js';
+import { XMAS } from '../course/course.js';
 
 const rnd = makeRandom('meadow');
 

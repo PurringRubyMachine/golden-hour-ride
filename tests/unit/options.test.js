@@ -13,14 +13,13 @@ test('defaults: the valley, no theme, no test options', () => {
   assert.equal(o.freeze, false);
 });
 
-test('course: only known courses are accepted', () => {
+test('course: the id is passed on as written, for the loader to look up', () => {
   assert.equal(parseOptions('?course=leckhampton').course, 'leckhampton');
-  assert.equal(parseOptions('?course=atlantis').course, 'valley');
+  assert.equal(parseOptions('?course=').course, 'valley');
 });
 
-test('the Christmas theme applies to the valley only', () => {
+test('the Christmas theme is asked for here; the loader decides whether the course has it', () => {
   assert.equal(parseOptions('?theme=christmas').xmas, true);
-  assert.equal(parseOptions('?theme=christmas&course=leckhampton').xmas, false);
   assert.equal(parseOptions('?theme=easter').xmas, false);
 });
 

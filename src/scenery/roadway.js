@@ -2,11 +2,11 @@
 import * as THREE from 'three';
 import { canvas2d } from '../util/dom.js';
 import { makeRandom } from '../util/random.js';
-import { XMAS } from '../options.js';
 import { uRain, uTime } from '../uniforms.js';
 import { MAX_ANISO, scene } from '../render/renderer.js';
 import { imgAsphalt, imgAsphaltN, imgGravel, imgTex } from '../render/textures.js';
 import { LEN, N, P, R } from '../course/road.js';
+import { XMAS } from '../course/course.js';
 
 const rnd = makeRandom('roadway');
 

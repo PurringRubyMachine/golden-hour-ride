@@ -1,9 +1,9 @@
 // Voice commands.
 import { $ } from '../util/dom.js';
-import { XMAS } from '../options.js';
 import { LAB, setWeather } from '../weather.js';
 import { setClean, skip } from './controls.js';
 import { HILLS, setHills } from '../devices/trainer.js';
+import { XMAS } from '../course/course.js';
 
 {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition,

@@ -1,4 +1,5 @@
 """Builds assets/leckhampton_osm.js: buildings, woods, single trees, hedges and walls around the Leckhampton loop.
+Old format: afterwards run  python3 tools/convert_legacy_course.py leckhampton  to update courses/leckhampton/.
 
 Source: OpenStreetMap (© OpenStreetMap contributors, ODbL), read from Overpass responses already cached by the
 real-ride project. Run after build_leckhampton.py:  python3 tools/build_leckhampton_osm.py ~/real-ride/osm-cache
