@@ -1,13 +1,18 @@
 """Building a course: route and DTM in, course folder out."""
 
+import datetime
+import hashlib
 import math
+import shlex
+import shutil
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 from pyproj import CRS, Transformer
 
 from . import BuildError, osm
-from .course import write
+from .course import write, write_json
 from .dtm import Dtm
 from .frame import choose_crs, crs_name, square_around
 from .gpx import read_gpx
@@ -37,8 +42,57 @@ class Options:
     stooks_below: float | None = None
     smoke: list = field(default_factory=list)  # [(lat, lon), ...]
     credits: list = field(default_factory=list)  # [{text, licence, url?}, ...]
+    keep_route: bool = False
     courses_dir: str = "courses"
     cache_dir: str = "tools/.cache"
+
+
+def shown(path):
+    """A path as it may be published: relative to the folder the builder runs in, or just the file's name if it's
+    outside it, so a home folder (and the user name in it) never ends up in a course."""
+    p = Path(path).resolve()
+    try:
+        return p.relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return p.name
+
+
+def _num(v):
+    return str(int(v)) if float(v).is_integer() else str(v)
+
+
+def command_line(o, route):
+    """The build as a command line, made from the options, with the route at the given path."""
+    a = ["python", "-m", "tools.coursebuilder", "build", "--id", o.id, "--name", o.name]
+    if o.short_name:
+        a += ["--short-name", o.short_name]
+    if o.description:
+        a += ["--description", o.description]
+    a += ["--route", route, "--dtm", *(shown(p) for p in o.dtm)]
+    a += ["--heights-credit", o.heights_credit, "--heights-licence", o.heights_licence]
+    if o.heights_url:
+        a += ["--heights-url", o.heights_url]
+    for c in o.credits:
+        a += ["--credit", "|".join([c["text"], c["licence"], *([c["url"]] if c.get("url") else [])])]
+    if o.scenery_style != "plain":
+        a += ["--scenery-style", o.scenery_style]
+    if o.sheep_above is not None:
+        a += ["--sheep-above", _num(o.sheep_above)]
+    if o.stooks_below is not None:
+        a += ["--stooks-below", _num(o.stooks_below)]
+    for lat, lon in o.smoke:
+        a += ["--smoke", f"{lat},{lon}"]
+    if not o.osm:
+        a.append("--no-osm")
+    if o.margin != 1300:
+        a += ["--margin", _num(o.margin)]
+    if o.close:
+        a.append("--close")
+    if o.start:
+        a += ["--start", _num(o.start)]
+    if o.keep_route:
+        a.append("--keep-route")
+    return shlex.join(a)
 
 
 def terrain_at(frame, grid, x, y):
@@ -70,6 +124,7 @@ def build(o, log=print):
         crs = choose_crs(CRS.from_wkt(dtm.first_crs().to_wkt()), lon, lat)
         dtm.crs = crs.to_wkt()
         log(f"DTM: {len(dtm.sources)} files; working in {crs_name(crs)} ({crs.name})")
+        dtm_files = sorted(Path(s.name).name for s in dtm.sources)
 
         to_xy = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
         line, gap = make_loop([to_xy.transform(lo, la) for la, lo in latlon], close=o.close)
@@ -124,7 +179,7 @@ def build(o, log=print):
         "road": "road.json",
     }
 
-    scenery = None
+    scenery = osm_as_of = None
     options = {}
     if o.scenery_style == "pastoral-1800s":
         options["sheepAbove"] = o.sheep_above if o.sheep_above is not None else round5(np.percentile(heights, 65))
@@ -133,7 +188,7 @@ def build(o, log=print):
         options["smoke"] = [[round(v, 1) for v in frame.local(*to_xy.transform(lo, la))] for la, lo in o.smoke]
     if o.osm:
         log("scenery: fetching OpenStreetMap features (cached after the first time)")
-        scenery = osm.scenery(frame, [(p[0], p[2]) for p in road], o.cache_dir)
+        scenery, osm_as_of = osm.scenery(frame, [(p[0], p[2]) for p in road], o.cache_dir)
         log(
             f"scenery: {len(scenery['buildings'])} buildings, {len(scenery['trees'])} single trees, "
             f"{len(scenery['lines'])} hedge and wall pieces"
@@ -150,6 +205,36 @@ def build(o, log=print):
     problems = write(o.courses_dir, course, grid, road, scenery)
     if problems:
         raise BuildError("the course was written but doesn't validate: " + "; ".join(problems))
+    folder = Path(o.courses_dir) / o.id
+    write_provenance(o, folder, crs_name(crs), dtm_files, osm_as_of, log)
     km = sum(math.dist((a[0], a[2]), (b[0], b[2])) for a, b in zip(road, road[1:] + road[:1])) / 1000
     log(f"wrote {o.courses_dir}/{o.id}/: {km:.1f} km")
     return {"course": course, "road": road, "heights": heights, "line": line, "frame": frame}
+
+
+def write_provenance(o, folder, working_crs, dtm_files, osm_as_of, log=print):
+    """build.json: where the course came from and how to build it again. The app doesn't read it. With keep_route,
+    the GPX is copied in as route.gpx and the recorded command uses the copy."""
+    kept = folder / "route.gpx"
+    digest = hashlib.sha256(Path(o.route).read_bytes()).hexdigest()
+    in_course = kept.exists() and kept.samefile(o.route)  # rebuilding from the course's own copy
+    if o.keep_route and not in_course:
+        shutil.copyfile(o.route, kept)
+    elif not o.keep_route and kept.exists() and not in_course:
+        kept.unlink()  # an earlier build's copy: build.json would no longer describe it
+        log(f"removed the earlier {shown(kept)} (pass --keep-route to keep the route with the course)")
+    has_copy = o.keep_route or in_course
+    route = shown(kept) if has_copy else shown(o.route)
+    info = {
+        "builtWith": "tools/coursebuilder",
+        "date": datetime.date.today().isoformat(),
+        "command": command_line(o, route),
+        "route": {
+            "file": Path(route).name,
+            "sha256": digest,
+            "kept": has_copy,
+        },
+        "dtm": {"workingCrs": working_crs, "files": dtm_files},
+        **({"openStreetMap": {"dataAsOf": osm_as_of}} if osm_as_of else {}),
+    }
+    write_json(folder / "build.json", info)

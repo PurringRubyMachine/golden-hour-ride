@@ -17,5 +17,5 @@
 - [ ] Every source is credited in `course.json`, each with its licence: heights, route (if drawn on someone's map), OpenStreetMap
 - [ ] Each licence allows the data to be shared and published with the app
 - [ ] Ridden round locally: the road sits on the ground, the start gives a good view, the credit line is complete
-- [ ] The course folder is under about 5 MB, and only `courses/<id>/` and `courses/index.json` change (no GPX or DTM files)
+- [ ] The course folder is under about 5 MB, includes the `build.json` the builder wrote, and only `courses/<id>/` and `courses/index.json` change (no DTM files; a GPX only as `route.gpx`, from `--keep-route`)
 - [ ] The route doesn't reveal anyone's home

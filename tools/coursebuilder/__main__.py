@@ -77,6 +77,12 @@ def parser():
     b.add_argument("--margin", type=float, default=1300, metavar="METRES", help="terrain around the route (1300)")
     b.add_argument("--close", action="store_true", help="join the route's ends if they're more than 50 m apart")
     b.add_argument("--start", type=_metres, default=0, metavar="METRES", help="where riders begin, along the loop")
+    b.add_argument(
+        "--keep-route",
+        action="store_true",
+        help="copy the GPX into the course as route.gpx, so others can rebuild it (only for a route you're happy to "
+        "publish: it shows where the loop goes)",
+    )
     b.add_argument("--courses-dir", default="courses", help=argparse.SUPPRESS)
     b.add_argument("--cache-dir", default="tools/.cache", help=argparse.SUPPRESS)
 

@@ -1,6 +1,8 @@
 """Building courses from synthetic DTMs, where the right answer is known."""
 
+import hashlib
 import json
+import shlex
 from pathlib import Path
 
 import numpy as np
@@ -152,3 +154,61 @@ def test_rebuild_replaces_index_entry(options):
     index = json.loads(index_path.read_text())
     assert [e["id"] for e in index] == ["valley", "test-loop"]
     assert index[1]["name"] == "Renamed"
+
+
+def test_build_json_records_the_sources(options, tmp_path, monkeypatch):
+    write_dtm(tmp_path / "dtm" / "plane.tif", UTM, WEST, NORTH, 2, SPAN // 2, SPAN // 2)
+    monkeypatch.chdir(tmp_path)  # paths in build.json are relative to here
+    o = options(start=100, sheep_above=175.0, scenery_style="pastoral-1800s")
+    build(o, log=lambda *_: None)
+    folder = tmp_path / "courses" / "test-loop"
+    info = json.loads((folder / "build.json").read_text())
+    assert info["builtWith"] == "tools/coursebuilder"
+    assert info["route"] == {
+        "file": "route.gpx",
+        "sha256": hashlib.sha256(Path(o.route).read_bytes()).hexdigest(),
+        "kept": False,
+    }
+    assert info["dtm"] == {"workingCrs": "EPSG:32630", "files": ["plane.tif"]}
+    assert "openStreetMap" not in info  # built without it
+    cmd = shlex.split(info["command"])
+    assert cmd[:4] == ["python", "-m", "tools.coursebuilder", "build"]
+    assert cmd[cmd.index("--route") + 1] == "route.gpx"
+    assert cmd[cmd.index("--dtm") + 1] == "dtm"
+    assert cmd[cmd.index("--name") + 1] == "Test loop"
+    assert cmd[cmd.index("--start") + 1] == "100" and cmd[cmd.index("--sheep-above") + 1] == "175"
+    assert "--no-osm" in cmd and "--keep-route" not in cmd
+    assert not (folder / "route.gpx").exists()
+
+
+def test_paths_outside_the_working_folder_become_bare_names(options, tmp_path, monkeypatch):
+    write_dtm(tmp_path / "dtm" / "plane.tif", UTM, WEST, NORTH, 2, SPAN // 2, SPAN // 2)
+    (tmp_path / "elsewhere").mkdir()
+    monkeypatch.chdir(tmp_path / "elsewhere")
+    build(options(), log=lambda *_: None)
+    info = json.loads((tmp_path / "courses" / "test-loop" / "build.json").read_text())
+    cmd = shlex.split(info["command"])
+    assert cmd[cmd.index("--route") + 1] == "route.gpx"
+    assert str(tmp_path) not in info["command"]
+
+
+def test_keep_route_copies_the_gpx_and_rebuilds_from_it(options, tmp_path, monkeypatch):
+    write_dtm(tmp_path / "dtm" / "plane.tif", UTM, WEST, NORTH, 2, SPAN // 2, SPAN // 2)
+    monkeypatch.chdir(tmp_path)
+    o = options(keep_route=True)
+    build(o, log=lambda *_: None)
+    folder = tmp_path / "courses" / "test-loop"
+    assert (folder / "route.gpx").read_bytes() == Path(o.route).read_bytes()
+    info = json.loads((folder / "build.json").read_text())
+    cmd = shlex.split(info["command"])
+    assert cmd[cmd.index("--route") + 1] == "courses/test-loop/route.gpx" and "--keep-route" in cmd
+    assert info["route"]["kept"] is True
+
+    # rebuilding from the course's own copy, with or without --keep-route, keeps it
+    build(options(route=str(folder / "route.gpx")), log=lambda *_: None)
+    assert (folder / "route.gpx").exists()
+    assert json.loads((folder / "build.json").read_text())["route"]["kept"] is True
+
+    # rebuilding from another GPX without --keep-route removes the old copy
+    build(options(), log=lambda *_: None)
+    assert not (folder / "route.gpx").exists()
