@@ -20,6 +20,10 @@
     "max": 381.6982116699219
   },
   "road": "road.json",
+  "imagery": {
+    "file": "ground.jpg",
+    "size": 4096
+  },
   "scenery": {
     "file": "scenery.json",
     "style": "plain",
@@ -35,6 +39,11 @@
       "text": "Route: Gatineau Park Loop on Ride with GPS (route 34405323), along roads © OpenStreetMap contributors.",
       "licence": "ODbL-1.0",
       "url": "https://ridewithgps.com/routes/34405323"
+    },
+    {
+      "text": "Ground from above: contains modified Copernicus Sentinel data 2024.",
+      "licence": "Copernicus Sentinel data licence",
+      "url": "https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice"
     },
     {
       "text": "Buildings, woods and hedges © OpenStreetMap contributors.",
