@@ -98,7 +98,7 @@ Tell it the course's name, where the route is, and where the terrain comes from.
 
 The Gatineau Park Loop was made from exactly this kind of prompt:
 
-> Now, let's create a new course called Gatineau Park Loop. You can find the GPX file here: https://ridewithgps.com/routes/34405323 and then get only the required GTM tiles from here: https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b
+> Now, let's create a new course called Gatineau Park Loop. You can find the GPX file here: https://ridewithgps.com/routes/34405323 and then get only the required DTM tiles from here: https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b
 
 From there, Claude Code fetches the route and the terrain, runs the course builder, checks the climbing and gradients are believable, chooses a start with a view, and shows you the course. It asks when it needs you. Your part:
 
