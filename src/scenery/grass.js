@@ -8,6 +8,7 @@ import { scene } from '../render/renderer.js';
 import { N, P, R, T } from '../course/road.js';
 import { meshH } from '../course/terrain.js';
 import { XMAS } from '../course/course.js';
+import { onQuality } from '../render/quality.js';
 
 const V3 = THREE.Vector3;
 const rnd = makeRandom('grass');
@@ -87,10 +88,17 @@ export const chunks = [];
       mesh.setColorAt(k, col.setHSL(0.19 + rnd() * 0.07, 0.25 + rnd() * 0.25, 0.5 + rnd() * 0.25));
     }
     mesh.computeBoundingSphere(); // a patch is 60 m of verge: skipped when it's out of view
+    mesh.count = Math.round(COUNT * share); // the tufts were placed at random, so the first ones are spread evenly
     mesh.receiveShadow = true;
     scene.add(mesh);
     return mesh;
   };
   if (!XMAS)
     for (let c0 = 0; c0 + PER <= N; c0 += PER) chunks.push({ c: P[c0 + PER / 2], mesh: null, build: () => build(c0) });
+  // lower quality draws fewer tufts in each patch
+  let share = 1;
+  onQuality((q) => {
+    share = q.vergeDensity;
+    for (const c of chunks) if (c.mesh) c.mesh.count = Math.round(COUNT * share);
+  });
 }

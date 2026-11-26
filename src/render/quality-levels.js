@@ -7,11 +7,57 @@ export const LEVELS = ['low', 'medium', 'high'];
 // pixels they shade. shadows: shadow map size, 0 for none (the sun is low, so the shadowed area reaches 700 m back
 // towards it and takes in a lot of woodland: shadows cost a built-in chip a quarter of its frames even at 1024). msaa: anti-aliasing samples. meadow: grass tufts in the
 // field round the rider. verge: how far ahead and behind the verge grass is drawn, in metres. trunks: how far away
-// tree trunks are drawn, in metres; beyond that they are hidden under the crowns and a pixel or two wide.
+// tree trunks are drawn, in metres; beyond that they are hidden under the crowns and a pixel or two wide. trees: the
+// same for whole trees; beyond it the woods carry on as the ground's canopy colour. treeDensity, vergeDensity: the
+// share of the trees, and of the verge grass, that is drawn.
+// terrainNear, terrainMid: the ground is drawn in full out to terrainNear metres, at half detail out to terrainMid, and
+// at a quarter beyond.
 export const SETTINGS = {
-  low: { scale: 0.5, shadows: 0, bloom: false, rays: false, msaa: 0, meadow: 30000, verge: 140, trunks: 250 },
-  medium: { scale: 0.7, shadows: 2048, bloom: true, rays: true, msaa: 2, meadow: 130000, verge: 200, trunks: 400 },
-  high: { scale: 1, shadows: 4096, bloom: true, rays: true, msaa: 4, meadow: 260000, verge: 230, trunks: Infinity },
+  low: {
+    scale: 0.5,
+    shadows: 0,
+    bloom: false,
+    rays: false,
+    msaa: 0,
+    meadow: 30000,
+    verge: 140,
+    vergeDensity: 0.5,
+    trees: 1000,
+    treeDensity: 0.6,
+    trunks: 250,
+    terrainNear: 800,
+    terrainMid: 2000,
+  },
+  medium: {
+    scale: 0.7,
+    shadows: 2048,
+    bloom: true,
+    rays: true,
+    msaa: 2,
+    meadow: 130000,
+    verge: 200,
+    vergeDensity: 0.8,
+    trees: 2000,
+    treeDensity: 1,
+    trunks: 400,
+    terrainNear: 1200,
+    terrainMid: 3000,
+  },
+  high: {
+    scale: 1,
+    shadows: 4096,
+    bloom: true,
+    rays: true,
+    msaa: 4,
+    meadow: 260000,
+    verge: 230,
+    vergeDensity: 1,
+    trees: Infinity,
+    treeDensity: 1,
+    trunks: Infinity,
+    terrainNear: 1500,
+    terrainMid: 3500,
+  },
 };
 
 // Where the automatic choice starts, from the graphics chip's name (WEBGL_debug_renderer_info): built-in graphics

@@ -57,7 +57,8 @@ Placement is random but the same on every visit: each module draws from its own 
 Most riders have a laptop's built-in graphics, which are limited mainly by how many pixels they shade, then by shadows and post-processing, then by geometry ([performance-plan.md](performance-plan.md) has the measurements). So:
 
 - **Quality levels.** `render/quality-levels.js` defines Low, Medium and High (render scale, shadows, bloom and light shafts, anti-aliasing, meadow density, verge grass and tree trunk distances) and the automatic choice; it is pure and unit-tested. `render/quality.js` holds the rider's choice and applies a level: a module that depends on the level registers with `onQuality(fn)`, which calls it now and on every change, so every setting can change mid-ride without a reload. Auto starts from the graphics chip's name, steps down when more than a quarter of the last 3 seconds went on frames over 20 ms, never steps up, and remembers where it settled. The screenshot tests (`?freeze`) use High.
-- **Tiles.** Trees (250 m tiles) and the ground (8 × 8 tiles) are drawn in pieces the camera, and the sun's shadow pass, can each skip. A new kind of scenery spread over the course should be tiled too, not one mesh with `frustumCulled = false`.
+- **Tiles.** Trees (250 m tiles, larger on large courses) and the ground (8 × 8 tiles, at most 100 cells across) are drawn in pieces the camera, and the sun's shadow pass, can each skip. A new kind of scenery spread over the course should be tiled too, not one mesh with `frustumCulled = false`.
+- **Distance.** Each ground tile comes at three levels of detail (`course/terrain-lod.js`: every grid point, every second or every fourth, with whole edges so tiles meet without cracks), chosen each frame by distance. At lower quality, distant tree tiles and trunks are not drawn (the woods carry on as the ground's canopy colour), and fewer trees and verge tufts are drawn.
 - **Budget.** Keep Low under about 1.5 million triangles a frame (`window.ride.stats` gives the count; `tests/perf/measure.js` measures it on the real graphics chip).
 
 ## The frame loop
@@ -67,7 +68,7 @@ Each frame, `ride.js`:
 - turns the power (slider, keys or trainer) and the road's gradient into speed (`physics.js`), and moves the rider along the road;
 - updates the smoothed gradient (`st.grade`), which `devices/trainer.js` sends to a smart trainer four times a second, scaled by the Hills setting;
 - builds the next verge grass patch near the rider (one per frame, so the ride stays smooth) and drops patches left behind;
-- shows the tree trunks near the camera (the rest are hidden at Low and Medium), and lets Auto quality judge the frame;
+- shows the trees and trunks near the camera and picks each ground tile's level of detail (`nearTrees`, `terrainDetail`), and lets Auto quality judge the frame;
 - moves the camera, sun and weather, and draws through the post-processing chain.
 
 ## Test hooks

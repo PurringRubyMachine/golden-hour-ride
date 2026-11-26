@@ -18,6 +18,7 @@ import { audio } from './audio.js';
 import { XMAS } from './course/course.js';
 import { onQuality, quality, qualityFrame } from './render/quality.js';
 import { nearTrees } from './scenery/trees.js';
+import { terrainDetail } from './course/terrain.js';
 
 const V3 = THREE.Vector3;
 
@@ -138,6 +139,7 @@ function tick() {
   }
   st.pending = pending;
   nearTrees(camera.position);
+  terrainDetail(camera.position);
 
   sunNdc.copy(camera.position).addScaledVector(sunDir, 1000).project(camera);
   rays.uniforms.uSunUv.value.set(sunNdc.x * 0.5 + 0.5, sunNdc.y * 0.5 + 0.5);

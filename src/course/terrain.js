@@ -7,6 +7,8 @@ import { imgGrass, imgGrassN, imgRock, imgTex } from '../render/textures.js';
 import { sunDir, sunFlat } from '../render/sky.js';
 import { XMAS, demH, real } from './course.js';
 import { nearRoad } from './road.js';
+import { tileIndex } from './terrain-lod.js';
+import { onQuality } from '../render/quality.js';
 
 function baseH(x, z) {
   if (real) return demH(x, z);
@@ -203,35 +205,45 @@ terrainMat.onBeforeCompile = (s) => {
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.055, 0.085, 0.035) * (0.7 + l3 * 0.9 + l2 * 0.5), canopy * 0.9);`,
     );
 };
-// The ground is drawn in 8 x 8 tiles sharing one set of vertices, so the camera, and the sun's shadow (which covers
-// only the ground round the rider), can each skip the tiles they can't see.
+// The ground is drawn in tiles sharing one set of vertices (8 × 8, or smaller on a large terrain: at most 100 cells
+// across), so the camera, and the sun's shadow (which covers only the ground round the rider), can each skip the
+// tiles they can't see. Each tile comes at three levels of detail, every grid point, every second or every fourth,
+// and terrainDetail picks one by distance each frame (terrain-lod.js keeps their edges whole, so tiles meet).
+const terrainTiles = [];
+const STEPS = [1, 2, 4];
+let detail = [Infinity, Infinity]; // full detail out to detail[0] metres, half to detail[1], quarter beyond
+onQuality((q) => (detail = [q.terrainNear, q.terrainMid]));
+export function terrainDetail(cam) {
+  for (const t of terrainTiles) {
+    const d = t.box.distanceToPoint(cam),
+      level = d < detail[0] ? 0 : d < detail[1] ? 1 : 2;
+    t.meshes.forEach((m, k) => (m.visible = k === level));
+  }
+}
 {
-  const span = Math.ceil(TG / 8),
+  const span = Math.min(Math.ceil(TG / 8), 100),
     v = new THREE.Vector3();
   for (let tz = 0; tz < TG; tz += span)
     for (let tx = 0; tx < TG; tx += span) {
       const x1 = Math.min(TG, tx + span),
         z1 = Math.min(TG, tz + span),
-        idx = new Uint32Array((x1 - tx) * (z1 - tz) * 6),
         box = new THREE.Box3();
-      let q = 0;
-      for (let iz = tz; iz < z1; iz++)
-        for (let ix = tx; ix < x1; ix++) {
-          const a = iz * TW + ix,
-            b = a + TW;
-          idx.set([a, b, a + 1, a + 1, b, b + 1], q); // the same two triangles per cell as tGeo
-          q += 6;
-        }
       for (let iz = tz; iz <= z1; iz++)
         for (let ix = tx; ix <= x1; ix++) box.expandByPoint(v.fromArray(tPos, (iz * TW + ix) * 3));
-      const g = new THREE.BufferGeometry();
-      for (const [name, attr] of Object.entries(tGeo.attributes)) g.setAttribute(name, attr);
-      g.setIndex(new THREE.BufferAttribute(idx, 1));
-      g.boundingBox = box;
-      g.boundingSphere = box.getBoundingSphere(new THREE.Sphere());
-      const tile = new THREE.Mesh(g, terrainMat);
-      tile.receiveShadow = true;
-      tile.castShadow = true;
-      scene.add(tile);
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      const meshes = STEPS.map((step, k) => {
+        const g = new THREE.BufferGeometry();
+        for (const [name, attr] of Object.entries(tGeo.attributes)) g.setAttribute(name, attr);
+        g.setIndex(new THREE.BufferAttribute(tileIndex(TW, tx, tz, x1, z1, step), 1));
+        g.boundingBox = box;
+        g.boundingSphere = sphere;
+        const tile = new THREE.Mesh(g, terrainMat);
+        tile.receiveShadow = true;
+        tile.castShadow = true;
+        tile.visible = k === 0;
+        scene.add(tile);
+        return tile;
+      });
+      terrainTiles.push({ box, meshes });
     }
 }

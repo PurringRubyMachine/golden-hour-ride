@@ -101,6 +101,8 @@ So the biggest lever is drawing fewer pixels on slow chips (a render scale below
 | Verge grass out to                           | 140 m  | 200 m   | 230 m            |
 | Tree trunks out to                           | 250 m  | 400 m   | everywhere       |
 
+Later additions, for large courses (see [large-courses-plan.md](large-courses-plan.md)): ground detail by distance, trees out to a distance (1 km, 2 km, everywhere), and the share of trees and verge grass drawn (60 % and 50 % at Low). `src/render/quality-levels.js` has the current numbers.
+
 The render scale is the big one. Below 1, the picture is drawn smaller and the browser stretches it to the window, so it is a little softer; the numbers and buttons on screen are not part of it and stay sharp. High draws one pixel per screen pixel, as the ride always did in practice (the post-processing was drawn at 1 even on high-resolution screens); point sizes (snow, Christmas lights, smoke) now follow the render scale, which also fixes their being drawn twice too big on high-resolution screens.
 
 The lens pass (rain drops on the lens, speed streaks, vignette and grain) stays at every level: it is cheap, and the weather depends on it.

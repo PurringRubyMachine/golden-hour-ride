@@ -43,6 +43,24 @@ Gatineau Park Loop (41 km, a 13.4 km terrain square) showed two problems that co
 1. Woods near the road, and the woodland canopy colour.
 2. Terrain levels of detail, and tree tile sizing.
 
+## What happened
+
+**1. Woods** (pull request 14): Gatineau now looks like a wooded parkway, dense along both sides. Its draw calls at Low fell from 1,062 to 570, but it still ran at 37 fps: the ground was the limit.
+
+**2. Distance** (this pull request): the terrain's levels of detail took Gatineau to 51 fps at Low (1.23 million triangles, from 3.4). Switching things off one at a time then showed trees, and the verge grass, as the remaining cost, so two more settings were added:
+
+- **Trees out to a distance**: at Low, tree tiles beyond 1 km are not drawn (Medium: 2 km; High: all). Beyond that the woods carry on as the ground's canopy colour from the first pull request, which is what makes this look right.
+- **Tree and verge grass density**: Low draws 60 % of the trees and half the verge grass (Medium: all the trees, 80 % of the grass). Both were placed at random, so drawing the first part of each list thins them evenly; the Christmas valley keeps every tree, because its fairy lights are wound round them.
+
+| Course (Intel UHD 630, Low) | Before: fps | calls | triangles | After: fps | calls | triangles |
+| --------------------------- | ----------: | ----: | --------: | ---------: | ----: | --------: |
+| Valley                      |          60 |    78 |     1.4 M |         60 |    65 |     0.7 M |
+| Christmas                   |          60 |    81 |     1.0 M |         60 |    68 |     0.6 M |
+| Leckhampton                 |          60 |   206 |     1.1 M |         60 |    79 |     0.6 M |
+| Gatineau                    |          38 | 1,062 |     3.4 M |         60 |   143 |     0.9 M |
+
+Tree tiles are larger on large courses (an area of at most about 24 × 24 tiles: 435 m on Gatineau, still 250 m elsewhere).
+
 ## Not doing here
 
 - **Out-and-back spurs.** The builder removes them (they are usually GPS noise, and the ride can't turn round: the road would overlap itself). On Gatineau that drops the 300 m into the Champlain Lookout car park and back, so the loop is 41.0 km, not Ride with GPS's 41.7 km. Riding into a dead end and turning would need the road drawn twice and a U-turn: a separate change, if wanted.
