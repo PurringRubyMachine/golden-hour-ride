@@ -5,3 +5,6 @@ _site/
 tools/.cache/
 test-results/
 playwright-report/
+.venv/
+.pytest_cache/
+.ruff_cache/

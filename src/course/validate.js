@@ -1,6 +1,7 @@
 // Checks a course against format 1 (docs/refactor-plan.md, "Course format, version 1").
 // Each function returns a list of problems, empty when all is well. No DOM and no Three.js, so the unit tests
 // can run it over every course in courses/.
+// tools/coursebuilder/validate.py is its Python twin; tests/course-cases.json keeps the two in step.
 
 export const FORMAT = 1;
 export const GENERATORS = ['valley'];

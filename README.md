@@ -39,6 +39,23 @@ npm run test:visual  # screenshot tests, about a minute: see tests/visual/README
 
 Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.yml`).
 
+## Building a course
+
+The course builder turns a GPX route and LiDAR DTM files (any format GDAL reads, in any coordinate system) into a course folder. It needs Python 3.10 or later.
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r tools/requirements-dev.txt
+
+.venv/bin/python -m tools.coursebuilder build --id my-loop --name "My Loop" \
+    --route my-loop.gpx --dtm dtm/ \
+    --heights-credit "Heights: <the DTM's source>" --heights-licence <its licence>
+.venv/bin/python -m tools.coursebuilder validate
+.venv/bin/pytest                        # the builder's tests, a few seconds
+```
+
+For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Environment Agency LiDAR for it and prints the credit options to use. `build --help` lists the rest: pastoral scenery, smoke, the start point, and turning off OpenStreetMap features. A full walkthrough is coming in phase 5 of `docs/refactor-plan.md`.
+
 ## Layout
 
 - `index.html` – the page: controls, display and the import map for Three.js.
@@ -53,7 +70,7 @@ Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.y
 - `courses/` – one folder per course; `index.json` lists them for the menu. The format is described in `docs/refactor-plan.md` (course format, version 1).
 - `assets/` – textures.
 - `tests/` – unit tests (`unit/`) and screenshot tests (`visual/`).
-- `tools/` – scripts that build the Leckhampton course data (in the old format, which `convert_legacy_course.py` turns into a course folder; a general course builder replaces all three in phase 4 of the plan).
+- `tools/coursebuilder/` – the course builder: a GPX route and LiDAR DTM files in, a course folder out (see below).
 - `docs/` – plans and design notes.
 
 ## Credits
