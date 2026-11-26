@@ -21,14 +21,17 @@ This fork started from the original's commit of 22 November 2026 ("Add MIT licen
 - A course builder (`tools/coursebuilder/`, Python): a GPX route and LiDAR DTM files of any format and coordinate system in, a course folder out, with buildings, woods, trees, hedges and walls from OpenStreetMap ([#5](https://github.com/PurringRubyMachine/golden-hour-ride/pull/5)).
   - `fetch-ea` downloads Environment Agency LiDAR for a route in England ([#5](https://github.com/PurringRubyMachine/golden-hour-ride/pull/5)); `fetch-hrdem` reads Natural Resources Canada's HRDEM for a route in Canada ([#13](https://github.com/PurringRubyMachine/golden-hour-ride/pull/13)).
   - Roads are drawn straight across bridges, where a bare-ground DTM would dip into the valley beneath ([#13](https://github.com/PurringRubyMachine/golden-hour-ride/pull/13)).
+  - `fetch-sentinel2` reads a summer satellite photo of the ground for a route anywhere (Copernicus Sentinel-2), and `build --imagery` turns it, or any colour aerial photo, into the course's `ground.jpg` ([#20](https://github.com/PurringRubyMachine/golden-hour-ride/pull/20)).
   - Each course records how it was built (`build.json`: the command, the route's checksum, the DTM files, the map data's date) ([#11](https://github.com/PurringRubyMachine/golden-hour-ride/pull/11)).
 - Leckhampton is rebuilt with the builder, so it can be built again from its sources (now 11.8 km) ([#10](https://github.com/PurringRubyMachine/golden-hour-ride/pull/10), [#11](https://github.com/PurringRubyMachine/golden-hour-ride/pull/11)).
 - A new course: the **Gatineau Park Loop**, 41 km in Quebec, up to the Champlain Lookout ([#13](https://github.com/PurringRubyMachine/golden-hour-ride/pull/13)).
+- Gatineau and Leckhampton have photos of the ground from above, from Sentinel-2 ([#22](https://github.com/PurringRubyMachine/golden-hour-ride/pull/22), [#23](https://github.com/PurringRubyMachine/golden-hour-ride/pull/23)).
 
 **Riding**
 
 - **Quality levels**: Auto, Low, Medium and High. On a laptop's built-in Intel graphics the ride went from 8–10 frames a second, with freezes of up to a second, to a steady 60 on Low ([#8](https://github.com/PurringRubyMachine/golden-hour-ride/pull/8), [#9](https://github.com/PurringRubyMachine/golden-hour-ride/pull/9), [#15](https://github.com/PurringRubyMachine/golden-hour-ride/pull/15)).
 - **Large forested courses**: woods dense along the road and thinning into the distance, distant woodland drawn as canopy, and distant ground and trees in less detail ([#14](https://github.com/PurringRubyMachine/golden-hour-ride/pull/14), [#15](https://github.com/PurringRubyMachine/golden-hour-ride/pull/15)).
+- **The ground from above**: on a course with a photo, the ground beyond 60–80 m takes its colour from it, toned to the evening light, so the distance shows real fields, forest, lakes and towns where it used to be a smooth green ([#21](https://github.com/PurringRubyMachine/golden-hour-ride/pull/21)).
 - **A course map**: the loop from above with you on it as a red dot, the height profile, and where you are on the loop ([#16](https://github.com/PurringRubyMachine/golden-hour-ride/pull/16)).
 - The trainer button explains why Bluetooth is missing (it is switched off by default in Chrome on Linux) instead of asking for Chrome ([#7](https://github.com/PurringRubyMachine/golden-hour-ride/pull/7)).
 - The unfinished Starry weather is removed ([#12](https://github.com/PurringRubyMachine/golden-hour-ride/pull/12)).
@@ -43,7 +46,7 @@ This fork started from the original's commit of 22 November 2026 ("Add MIT licen
 
 ## What's in it
 
-- Three courses: an invented mountain valley; a real 11.8 km Leckhampton loop built from Environment Agency lidar, dressed as the 19th-century hill (sheep, hay stooks, quarry smoke); and the 41 km Gatineau Park Loop in Quebec, built from Natural Resources Canada's HRDEM.
+- Three courses: an invented mountain valley; a real 11.8 km Leckhampton loop built from Environment Agency lidar, dressed as the 19th-century hill (sheep, hay stooks, quarry smoke); and the 41 km Gatineau Park Loop in Quebec, built from Natural Resources Canada's HRDEM. On the two real courses the distant ground is coloured from a satellite photo, so the vale below Leckhampton Hill and the land round Gatineau Park show their real fields and forest.
 - Four looks: Golden, Overcast, Rain and Mist. Buttons at the top, keys 1–4, or by voice.
 - Skip forward and back 250 m with the arrow keys.
 - A course map in the corner: the loop from above with you on it, the height profile, and where you are on the loop ("17.4 of 41.1 km", from the course's beginning). The Map button or the M key turns it off and on; the choice is kept in the browser.
@@ -105,6 +108,7 @@ From there, Claude Code fetches the route and the terrain, runs the course build
 - **Download files that need a login.** For example, Ride with GPS only gives the GPX to signed-in users: export **GPX Track**, not GPX Route.
 - **Terrain outside England and Canada.** Claude Code fetches it itself in England (Environment Agency) and Canada (HRDEM). Elsewhere, download the tiles for the area from your country's source (see [the list](docs/adding-a-course.md#2-the-dtm)) and give it the folder.
 - **Check what you're allowed to share.** The route and terrain must have licences that let them be published, and both get credited on screen.
+- **The photo from above** comes from Sentinel-2 anywhere, without your help. Claude Code picks the clearest summer scene; have a look at it, and say if another month would suit the place better (Leckhampton uses May, before the fields are harvested).
 - **Ride it.** Is the road on the ground? Do the hills feel right? Is the start a good view?
 
 ### 4. Share it
@@ -152,7 +156,7 @@ python3 -m venv .venv
 .venv/bin/pytest                        # the builder's tests, a few seconds
 ```
 
-For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Environment Agency LiDAR for it, and for one in Canada `fetch-hrdem` reads Natural Resources Canada's HRDEM; both print the credit options to use. `build --help` lists the rest: pastoral scenery, smoke, the start point, and turning off OpenStreetMap features. The full walkthrough, with free DTM sources for many countries, is [docs/adding-a-course.md](docs/adding-a-course.md).
+For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Environment Agency LiDAR for it, and for one in Canada `fetch-hrdem` reads Natural Resources Canada's HRDEM; both print the credit options to use. `fetch-sentinel2` reads a satellite photo of the ground for a route anywhere, for `build --imagery` (it prints its credit too). `build --help` lists the rest: pastoral scenery, smoke, the start point, and turning off OpenStreetMap features. The full walkthrough, with free DTM sources for many countries, is [docs/adding-a-course.md](docs/adding-a-course.md).
 
 ## Layout
 
@@ -168,8 +172,8 @@ For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Envi
 - `courses/` – one folder per course; `index.json` lists them for the menu. The format is described in [docs/course-format.md](docs/course-format.md).
 - `assets/` – textures.
 - `tests/` – unit tests (`unit/`), screenshot tests (`visual/`) and frame-rate measurements (`perf/`).
-- `tools/coursebuilder/` – the course builder: a GPX route and LiDAR DTM files in, a course folder out (see below).
-- `docs/` – [architecture](docs/architecture.md), [course format](docs/course-format.md), [adding a course](docs/adding-a-course.md), the [refactor plan](docs/refactor-plan.md) and the [performance plan](docs/performance-plan.md).
+- `tools/coursebuilder/` – the course builder: a GPX route, LiDAR DTM files and optionally a photo from above in, a course folder out (see below).
+- `docs/` – [architecture](docs/architecture.md), [course format](docs/course-format.md), [adding a course](docs/adding-a-course.md), the [refactor plan](docs/refactor-plan.md), the [performance plan](docs/performance-plan.md) and the [aerial photos plan](docs/aerial-photos-plan.md).
 
 Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -178,6 +182,7 @@ Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 - Original ride: Jamie Marsland.
 - Textures: Poly Haven (CC0).
 - Terrain: Environment Agency LiDAR Composite DTM, Open Government Licence v3.0; Natural Resources Canada HRDEM, Open Government Licence – Canada.
+- Photos of the ground from above: contains modified Copernicus Sentinel data (2024, 2026), via Earth Search.
 - Gatineau Park Loop route: [Ride with GPS route 34405323](https://ridewithgps.com/routes/34405323).
 - Roads, woodland and field boundaries: © OpenStreetMap contributors, ODbL.
 - 3D engine: Three.js (MIT), loaded from jsDelivr.
@@ -186,4 +191,4 @@ Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The code is released under the MIT licence: see `LICENSE`. Use it, change it, build your own ride.
 
-The MIT licence covers the code only. The course data in `courses/` is derived from the sources credited above and stays under their terms, recorded in each course's `credits` (and its README): the Open Government Licence v3.0 or the Open Government Licence – Canada for the terrain, and the ODbL for the OpenStreetMap data. If you share or adapt that data, keep those credits.
+The MIT licence covers the code only. The course data in `courses/` is derived from the sources credited above and stays under their terms, recorded in each course's `credits` (and its README): the Open Government Licence v3.0 or the Open Government Licence – Canada for the terrain, the ODbL for the OpenStreetMap data, and the Copernicus Sentinel data licence for the photos from above. If you share or adapt that data, keep those credits.
