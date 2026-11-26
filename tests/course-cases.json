@@ -1,0 +1,90 @@
+{
+  "about": "Validator cases run by both tests/unit/course-cases.test.js and tests/python/test_validate.py, so the JavaScript and Python validators agree. Each case starts from a base course, sets or deletes fields (dotted paths; numbers index lists), and names a word from the expected problem, or null if the course is valid.",
+  "bases": {
+    "survey": {
+      "format": 1,
+      "id": "my-loop",
+      "name": "My Loop",
+      "kind": "survey",
+      "loop": true,
+      "start": 0,
+      "origin": { "crs": "EPSG:2958", "x": 500000, "y": 4800000 },
+      "terrain": { "file": "terrain.bin", "size": 1000, "cells": 100, "min": 10, "max": 90 },
+      "road": "road.json",
+      "scenery": { "file": "scenery.json", "style": "plain", "options": {} },
+      "credits": [{ "text": "Heights: HRDEM", "licence": "OGL-Canada-2.0" }]
+    },
+    "procedural": {
+      "format": 1,
+      "id": "valley",
+      "name": "Valley",
+      "kind": "procedural",
+      "generator": "valley",
+      "loop": true,
+      "credits": []
+    }
+  },
+  "cases": [
+    { "name": "a valid survey course", "base": "survey", "problem": null },
+    { "name": "a valid procedural course", "base": "procedural", "problem": null },
+    {
+      "name": "optional fields",
+      "base": "survey",
+      "set": {
+        "shortName": "Mine",
+        "description": "",
+        "credits.0.url": "https://example.org",
+        "scenery.options.smoke": [[1, 2]],
+        "scenery.options.sheepAbove": 100
+      },
+      "problem": null
+    },
+    { "name": "no scenery at all", "base": "survey", "delete": ["scenery"], "problem": null },
+    { "name": "scenery without options", "base": "survey", "delete": ["scenery.options"], "problem": null },
+    {
+      "name": "whole-number cells written as 100.0",
+      "base": "survey",
+      "set": { "terrain.cells": 100.0 },
+      "problem": null
+    },
+    { "name": "wrong format", "base": "survey", "set": { "format": 2 }, "problem": "format" },
+    { "name": "format as true", "base": "survey", "set": { "format": true }, "problem": "format" },
+    { "name": "id not the folder", "base": "survey", "set": { "id": "other" }, "problem": "folder" },
+    { "name": "upper-case id", "base": "survey", "set": { "id": "My-Loop" }, "id": "My-Loop", "problem": "lower-case" },
+    { "name": "no name", "base": "survey", "set": { "name": "  " }, "problem": "name is required" },
+    { "name": "empty short name", "base": "survey", "set": { "shortName": "" }, "problem": "shortName" },
+    { "name": "not a loop", "base": "survey", "set": { "loop": false }, "problem": "loops only" },
+    { "name": "negative start", "base": "survey", "set": { "start": -5 }, "problem": "start" },
+    { "name": "unknown kind", "base": "survey", "set": { "kind": "imaginary" }, "problem": "kind" },
+    { "name": "unknown generator", "base": "procedural", "set": { "generator": "moon" }, "problem": "generator" },
+    { "name": "survey without credits", "base": "survey", "set": { "credits": [] }, "problem": "credits must name" },
+    { "name": "credits missing", "base": "survey", "delete": ["credits"], "problem": "credits must be a list" },
+    { "name": "credit without licence", "base": "survey", "delete": ["credits.0.licence"], "problem": "licence" },
+    { "name": "credit url not text", "base": "survey", "set": { "credits.0.url": 5 }, "problem": "url" },
+    { "name": "origin without crs", "base": "survey", "delete": ["origin.crs"], "problem": "origin" },
+    { "name": "no terrain", "base": "survey", "delete": ["terrain"], "problem": "terrain is required" },
+    { "name": "fractional cells", "base": "survey", "set": { "terrain.cells": 10.5 }, "problem": "cells" },
+    { "name": "min above max", "base": "survey", "set": { "terrain.max": 5 }, "problem": "min below max" },
+    { "name": "no road", "base": "survey", "delete": ["road"], "problem": "road" },
+    {
+      "name": "unknown scenery style",
+      "base": "survey",
+      "set": { "scenery.style": "gothic" },
+      "problem": "scenery.style"
+    },
+    {
+      "name": "scenery options not an object",
+      "base": "survey",
+      "set": { "scenery.options": [] },
+      "problem": "scenery.options"
+    },
+    {
+      "name": "sheep height not a number",
+      "base": "survey",
+      "set": { "scenery.options.sheepAbove": "high" },
+      "problem": "sheepAbove"
+    },
+    { "name": "smoke as one point", "base": "survey", "set": { "scenery.options.smoke": [1, 2] }, "problem": "smoke" },
+    { "name": "not an object", "base": "survey", "replace": [1, 2], "problem": "object" }
+  ]
+}
