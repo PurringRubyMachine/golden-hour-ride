@@ -47,7 +47,7 @@ Three things make it worse than it needs to be:
 ### 1. Measure (no change to the picture)
 
 - `window.ride.stats`: draw calls and triangles for the last frame, counted across all passes (`renderer.info` with `autoReset` off, reset at the start of each frame). Cheap enough to leave on.
-- `tests/perf/measure.mjs`: a Playwright script that opens the ride in a visible Chrome (headless Chrome won't use the real graphics chip on Linux), lets it settle, and prints frames per second, the median, 95th-percentile and longest frame, and `ride.stats`, for each course. Run by hand, not in CI (CI has no graphics chip). `tests/perf/README.md` says how, including how to choose the Intel or NVIDIA chip on a hybrid laptop.
+- `tests/perf/measure.js`: a Playwright script that opens the ride in a visible Chrome (headless Chrome won't use the real graphics chip on Linux), lets it settle, and prints frames per second, the median, 95th-percentile and longest frame, and `ride.stats`, for each course. Run by hand, not in CI (CI has no graphics chip). `tests/perf/README.md` says how, including how to choose the Intel or NVIDIA chip on a hybrid laptop.
 - Record the numbers above as the baseline, and re-measure after each step.
 
 ### 2. Cut the course into tiles, so culling works (no change to the picture)
@@ -87,7 +87,7 @@ A new module, `src/render/quality.js`, with three levels. Every setting in them 
 ### 5. Docs and guard rails
 
 - `docs/architecture.md`: tiles, distances and quality levels; a triangle budget (about 1.5 M at Medium) for anyone adding scenery.
-- `CONTRIBUTING.md`: for changes to scenery or rendering, run `tests/perf/measure.mjs` on built-in graphics if you can, and give the numbers in the pull request.
+- `CONTRIBUTING.md`: for changes to scenery or rendering, run `tests/perf/measure.js` on built-in graphics if you can, and give the numbers in the pull request.
 - A unit test of the automatic choice (feed it frame times, check its steps), with the logic kept free of Three.js.
 
 ## Pull requests
@@ -111,7 +111,7 @@ Two, so the change that mustn't alter the picture is reviewed alone:
 - **WebGPU**: it lowers the JavaScript cost of each draw call, which is already about 1 ms. Not worth it yet, and it is behind a setting in Chrome on Linux.
 - **Changing what the scenery is** (fewer trees, smaller woods). The aim is the same picture for less work.
 
-## Open questions
+## Decided
 
-- Should the Quality control be on the main bar, or inside a small Settings panel with Hills? (Proposed: the main bar, beside Hills, until there are more settings.)
-- Should a rider on Low see a one-time note that the ride looks better on a computer with a graphics card? (Proposed: no.)
+- The Quality control goes on the main bar, beside Hills, until there are more settings.
+- A rider on Low sees no note suggesting a better computer.
