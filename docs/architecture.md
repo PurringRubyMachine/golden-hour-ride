@@ -31,7 +31,7 @@ If a course is broken, `course.js` puts the reason in place of the loading messa
 | `course/road.js`     | The road as a smooth closed curve: `at(s)` gives position and direction `s` metres along; `nearRoad(x, z)` how far a point is from it.             |
 | `course/terrain.js`  | The ground mesh: surveyed heights, or the valley's noise mountains; blended into the road's own heights beside it.                                 |
 | `scenery/*`          | Road surface, verge grass (built in patches near the rider), meadow, trees, hedges and walls, sheep and stooks, chalets and lights, clouds, smoke. |
-| `render/*`           | Renderer and camera, textures, sky and sun, post-processing (bloom, light shafts, lens).                                                           |
+| `render/*`           | Renderer and camera, textures, sky and sun, post-processing (bloom, light shafts, lens), and the quality levels.                                   |
 | `weather.js`         | The weathers and the change from one to another.                                                                                                   |
 | `physics.js`         | Speed from power and gradient. Pure: no DOM, no Three.js, unit-tested.                                                                             |
 | `devices/ftms.js`    | Smart trainer messages (Bluetooth FTMS). Pure, unit-tested.                                                                                        |
@@ -50,6 +50,14 @@ The app treats both kinds of course the same way through `course.json`: a `proce
 
 Placement is random but the same on every visit: each module draws from its own seeded stream (`makeRandom('trees')` in `util/random.js`). Streams are independent, so changing how many random numbers one module uses doesn't move another module's trees. A new module should take its own stream with a new name.
 
+## Quality and performance
+
+Most riders have a laptop's built-in graphics, which are limited mainly by how many pixels they shade, then by shadows and post-processing, then by geometry ([performance-plan.md](performance-plan.md) has the measurements). So:
+
+- **Quality levels.** `render/quality-levels.js` defines Low, Medium and High (render scale, shadows, bloom and light shafts, anti-aliasing, meadow density, verge grass and tree trunk distances) and the automatic choice; it is pure and unit-tested. `render/quality.js` holds the rider's choice and applies a level: a module that depends on the level registers with `onQuality(fn)`, which calls it now and on every change, so every setting can change mid-ride without a reload. Auto starts from the graphics chip's name, steps down when more than a quarter of the last 3 seconds went on frames over 20 ms, never steps up, and remembers where it settled. The screenshot tests (`?freeze`) use High.
+- **Tiles.** Trees (250 m tiles) and the ground (8 × 8 tiles) are drawn in pieces the camera, and the sun's shadow pass, can each skip. A new kind of scenery spread over the course should be tiled too, not one mesh with `frustumCulled = false`.
+- **Budget.** Keep Low under about 1.5 million triangles a frame (`window.ride.stats` gives the count; `tests/perf/measure.js` measures it on the real graphics chip).
+
 ## The frame loop
 
 Each frame, `ride.js`:
@@ -57,11 +65,12 @@ Each frame, `ride.js`:
 - turns the power (slider, keys or trainer) and the road's gradient into speed (`physics.js`), and moves the rider along the road;
 - updates the smoothed gradient (`st.grade`), which `devices/trainer.js` sends to a smart trainer four times a second, scaled by the Hills setting;
 - builds the next verge grass patch near the rider (one per frame, so the ride stays smooth) and drops patches left behind;
+- shows the tree trunks near the camera (the rest are hidden at Low and Medium), and lets Auto quality judge the frame;
 - moves the camera, sun and weather, and draws through the post-processing chain.
 
 ## Test hooks
 
-`window.ride` exposes the ride state for tests and for looking around by hand: `ride.go(metres)` jumps along the road, `ride.weather(name, true)` changes the weather at once, `ride.held` says a frozen view is complete. `?freeze` stops the clock and holds the picture still; `?at=` and `?weather=` set the start. See [tests/visual/README.md](../tests/visual/README.md).
+`window.ride` exposes the ride state for tests and for looking around by hand (`ride.stats`: draw calls, triangles and the quality level of the last frame): `ride.go(metres)` jumps along the road, `ride.weather(name, true)` changes the weather at once, `ride.held` says a frozen view is complete. `?freeze` stops the clock and holds the picture still; `?at=` and `?weather=` set the start. See [tests/visual/README.md](../tests/visual/README.md).
 
 ## Course builder
 
@@ -87,6 +96,7 @@ Each frame, `ride.js`:
 | `tests/unit/`         | `npm test`: physics, FTMS, options, random streams, the validator, every course's data           | CI and locally |
 | `tests/python/`       | `pytest`: the builder against synthetic DTMs whose answers are known; the shared validator cases | CI and locally |
 | `tests/visual/`       | `npm run test:visual`: three screenshots compared pixel for pixel                                | locally        |
+| `tests/perf/`         | `node tests/perf/measure.js`: frame rate and draw counts on the real graphics chip               | locally        |
 | `test_leckhampton.py` | Rebuilds Leckhampton from Environment Agency LiDAR and compares; needs `COURSEBUILDER_NETWORK=1` | locally        |
 
 The screenshot set stays at three (the valley, Christmas, Leckhampton): it checks the renderer, not the courses. New courses are covered by the data checks, which cost almost nothing however many there are.

@@ -13,12 +13,13 @@ It needs Google Chrome installed, and opens visible windows for a few seconds ea
 ```
 Mesa Intel(R) UHD Graphics (CML GT2)
 1920 x 1080, pixel ratio 1
-course          fps   median      95%    worst  calls   triangles
-valley          8.9   16.7ms  869.1ms   1679ms     43   7,666,874
+course          fps   median      95%    worst  calls   triangles  quality
+valley          8.6   16.7ms  850.0ms    900ms     43   7,666,874  high
 ```
 
 - **fps**, **median**, **95%** and **worst** are from the times between frames. A smooth ride has a median and 95% near 16.7 ms (60 fps) and no long worst frame.
 - **calls** and **triangles** are for the last frame, all passes together: the shadow map, the scene and the post-processing. The same numbers are in `window.ride.stats` in the browser console.
+- **quality** is the level the ride was on at the end. Without `--query quality=...` it is on Auto, which may step down during the run, so give a level when comparing changes.
 
 Built-in graphics (Intel, AMD's Radeon Graphics) are the ones that matter: most riders have them. A frame budget of about 1.5 million triangles keeps the Medium quality level smooth there.
 

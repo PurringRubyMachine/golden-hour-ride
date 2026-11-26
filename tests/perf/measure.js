@@ -40,6 +40,7 @@ try {
   for (const name of courses) {
     if (!(name in COURSES)) throw new Error(`unknown course ${name}: try ${Object.keys(COURSES).join(', ')}`);
     const page = await browser.newPage({ viewport: { width, height } });
+    page.on('pageerror', (e) => console.error(`${name}: page error: ${e.message}`));
     const query = [COURSES[name], extra].filter(Boolean).join('&');
     for (let tries = 0; ; tries++) {
       try {
@@ -83,12 +84,12 @@ try {
     if (first) {
       console.log(`${r.gpu}\n${width} x ${height}, pixel ratio ${await page.evaluate(() => devicePixelRatio)}`);
       console.log(
-        `${'course'.padEnd(12)} ${pad('fps', 6)} ${pad('median', 8)} ${pad('95%', 8)} ${pad('worst', 8)} ${pad('calls', 6)} ${pad('triangles', 11)}`,
+        `${'course'.padEnd(12)} ${pad('fps', 6)} ${pad('median', 8)} ${pad('95%', 8)} ${pad('worst', 8)} ${pad('calls', 6)} ${pad('triangles', 11)}  quality`,
       );
       first = false;
     }
     console.log(
-      `${name.padEnd(12)} ${pad(r.fps.toFixed(1), 6)} ${pad(r.median.toFixed(1), 6)}ms ${pad(r.p95.toFixed(1), 6)}ms ${pad(r.worst.toFixed(0), 6)}ms ${pad(r.calls, 6)} ${pad(r.triangles.toLocaleString('en'), 11)}`,
+      `${name.padEnd(12)} ${pad(r.fps.toFixed(1), 6)} ${pad(r.median.toFixed(1), 6)}ms ${pad(r.p95.toFixed(1), 6)}ms ${pad(r.worst.toFixed(0), 6)}ms ${pad(r.calls, 6)} ${pad(r.triangles.toLocaleString('en'), 11)}  ${r.quality}`,
     );
     await page.close();
   }

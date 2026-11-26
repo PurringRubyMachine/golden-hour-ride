@@ -89,29 +89,39 @@ So the biggest lever is drawing fewer pixels on slow chips (a render scale below
 
 ### 3. Quality settings, chosen automatically
 
-A new module, `src/render/quality.js`, with three levels. Every setting in them can change while riding, so the automatic choice never needs a reload:
+`src/render/quality-levels.js` (pure, unit-tested) defines three levels and the automatic choice; `src/render/quality.js` holds the rider's choice and applies it. Every setting can change while riding, so the automatic choice never needs a reload:
 
-| Setting                                      | Low    | Medium       | High (as now)         |
-| -------------------------------------------- | ------ | ------------ | --------------------- |
-| Render scale (pixels drawn per screen pixel) | 0.5    | 0.7          | the screen's, up to 2 |
-| Shadows                                      | off    | 2048², sharp | 4096², soft           |
-| Bloom and light shafts                       | off    | on           | on                    |
-| Anti-aliasing (MSAA)                         | off    | 2×           | 4×                    |
-| Meadow tufts                                 | 60,000 | 130,000      | 260,000               |
-| Verge grass out to                           | 140 m  | 200 m        | 230 m                 |
+| Setting                                      | Low    | Medium  | High (as before) |
+| -------------------------------------------- | ------ | ------- | ---------------- |
+| Render scale (pixels drawn per screen pixel) | 0.5    | 0.7     | 1                |
+| Shadows                                      | off    | 2048²   | 4096²            |
+| Bloom and light shafts                       | off    | on      | on               |
+| Anti-aliasing (MSAA)                         | off    | 2×      | 4×               |
+| Meadow tufts                                 | 30,000 | 130,000 | 260,000          |
+| Verge grass out to                           | 140 m  | 200 m   | 230 m            |
+| Tree trunks out to                           | 250 m  | 400 m   | everywhere       |
 
-The render scale is the big one. Below 1, the picture is drawn smaller and the browser stretches it to the window, so it is a little softer; the head unit and buttons are not part of it and stay sharp. On a high-resolution laptop screen (pixel ratio 2), Medium draws an eighth of the pixels High does.
+The render scale is the big one. Below 1, the picture is drawn smaller and the browser stretches it to the window, so it is a little softer; the numbers and buttons on screen are not part of it and stay sharp. High draws one pixel per screen pixel, as the ride always did in practice (the post-processing was drawn at 1 even on high-resolution screens); point sizes (snow, Christmas lights, smoke) now follow the render scale, which also fixes their being drawn twice too big on high-resolution screens.
 
-(The lens pass, which does rain drops on the lens and the painted look, stays at every level: it is cheap, and the weather depends on it.)
+The lens pass (rain drops on the lens, the painted look) stays at every level: it is cheap, and the weather depends on it.
 
-- **Automatic** is the default. It starts at Medium on built-in graphics (the renderer's name says "Intel", "Mesa", "Iris", "Radeon Graphics" or "Apple"), otherwise High. After loading, it watches the frames: if more than 10 % of frames over 3 seconds take longer than 20 ms, it steps down a level; if every frame for 20 seconds is under 12 ms, it may step back up once. Never more than one step every 5 seconds, so it doesn't seesaw.
-- **A Quality control** beside Hills: Auto, Low, Medium, High, remembered in this browser like Hills. `?quality=` sets it for one visit.
-- **Screenshot tests** use `?quality=high` (and so does `?freeze` unless told otherwise), so the baselines don't depend on the machine.
-- Meadow: draw the first _n_ tufts by setting `instanceCount` (the tufts are already in random order, so any first _n_ are spread evenly), and widen each tuft a little at lower counts so the field stays green.
+How it differs from the first draft, and why (measured on the Intel UHD 630):
+
+- **Low has no shadows, and the meadow is sparser (30,000).** Even a 1024² shadow map, or a smaller shadowed area, cost Low a quarter of its frame rate: the sun is low, so the shadowed area reaches 700 m back towards it and takes in a lot of woodland, and trees are tiled in 250 m pieces. Low looks flatter without them (no tree shadows across the road), and without bloom and light shafts the pale patches on the sun side of Leckhampton's tree crowns, there at every level, show more.
+- **Tree trunks stop at a distance** on Low and Medium: at Leckhampton they were Low's largest cost (26,000 trunks).
+- **Auto judges time, not frames.** The chip at Medium drew most frames in 16.7 ms and then stalled for a quarter of a second, so slow frames were under a tenth of the frames but took most of the time. Auto steps down when more than a quarter of the last 3 seconds went on frames over 20 ms.
+- **Auto never steps up.** On a 60 Hz screen every frame takes 16.7 ms however fast the chip is, so there is no telling how much room there is. Instead it remembers where it settled and starts there next time (never above where the chip's name would start it), so the stutter before it steps down happens once, not every visit.
+- **Which chips start at Medium**: Intel (not Arc), AMD's built-in Radeon Graphics and Vega, Apple, and phone chips; software rendering starts at Low; everything else at High. "Mesa" alone doesn't decide it: AMD's discrete cards on Linux say it too.
+
+The rest as planned:
+
+- **A Quality button** beside Hills: each click moves on through Auto, Low, Medium and High; on Auto it shows the level, as "Quality: Auto (Low)". Remembered in this browser; `?quality=` sets it for one visit.
+- **Screenshot tests** use High (`?freeze` does unless `?quality=` says otherwise), so the baselines don't depend on the machine. The baselines change only in the controls row, for the new button.
+- Meadow: draw the first _n_ tufts by setting `instanceCount` (they were placed at random, so any first _n_ are spread evenly), each a little wider at lower counts so the field stays green.
 
 ### 4. Draw distant trees simply (if still needed)
 
-Only if, after step 3, Medium on the Intel chip still drops frames because of trees (measured by switching them off), or High on a mid-range card does.
+Only if, after step 3, a level still drops frames because of trees (measured by switching them off). After step 3, Low holds 60 fps on the Intel UHD 630 on all three courses, so this waits until a slower chip, or Medium on a typical one, shows the need.
 
 - **Far trees as pictures.** At start-up, render each tree kind (pine, snowy pine, broadleaf) once, from the side, into a small texture. Beyond a distance (`treeFar`, about 400 m) a tile draws its trees as two crossed quads with that picture (4 triangles, not 300), lit and fogged the same way. Tiles switch whole, and the switch is hidden by fading over 50 m (the picture and the full tree overlap with dithered transparency, which costs nothing extra with `alphaTest`).
 - **Trunks** stop beyond about 250 m: at that distance a trunk is under the crown and a pixel wide.
@@ -129,7 +139,7 @@ Only if, after step 3, Medium on the Intel chip still drops frames because of tr
 So that the change that mustn't alter the picture is reviewed alone:
 
 1. **Steps 1 and 2**: measuring, and tiles. Screenshots match (but for 3 pixels, from the drawing order). Numbers before and after in the description.
-2. **Steps 3 and 5**: quality settings and docs. Baselines unchanged (the tests use High).
+2. **Steps 3 and 5**: quality settings and docs. The tests use High: baselines change only in the controls row, for the Quality button.
 3. **Step 4**, if needed: distant trees, with baselines updated and before-and-after pictures.
 
 ## Risks

@@ -1,7 +1,7 @@
 // Christmas lights.
 import * as THREE from 'three';
 import { makeRandom } from '../util/random.js';
-import { uTime } from '../uniforms.js';
+import { uPx, uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { st0 } from '../course/course.js';
 import { xl } from './chalets.js';
@@ -23,7 +23,7 @@ if (xl.p.length) {
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      uniforms: { uTime, uPx: { value: (innerHeight * Math.min(devicePixelRatio, 2)) / (2 * Math.tan(0.6)) } },
+      uniforms: { uTime, uPx },
       vertexShader: `uniform float uTime, uPx; attribute vec3 aCol; attribute float aPh; varying vec3 vCol;
       void main(){
         vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;

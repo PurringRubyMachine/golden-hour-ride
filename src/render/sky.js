@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { renderer, scene } from './renderer.js';
+import { onQuality } from './quality.js';
 import { XMAS } from '../course/course.js';
 
 const V3 = THREE.Vector3;
@@ -60,5 +61,13 @@ Object.assign(sun.shadow.camera, { left: -110, right: 110, top: 110, bottom: -11
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.6;
 scene.add(sun, sun.target);
+onQuality((s) => {
+  sun.castShadow = s.shadows > 0;
+  if (s.shadows && sun.shadow.mapSize.x !== s.shadows) {
+    sun.shadow.mapSize.set(s.shadows, s.shadows);
+    sun.shadow.map?.dispose(); // made again at the new size
+    sun.shadow.map = null;
+  }
+});
 export const hemi = new THREE.HemisphereLight(XMAS ? 0xa6b4ea : 0xa9b8ee, XMAS ? 0x9aa2b6 : 0x6b563a, 2.2);
 scene.add(hemi);
