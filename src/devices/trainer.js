@@ -3,6 +3,8 @@ import { $ } from '../util/dom.js';
 import { OPTIONS } from '../options.js';
 import { st } from '../state.js';
 import { setTarget } from '../ui/controls.js';
+import { panel } from '../ui/panels.js';
+import { bluetoothHelp } from './bluetooth-help.js';
 import { FTMS, FTMS_POINT, OP_CONTROL, ftmsAsk, simParams, trainerGrade } from './ftms.js';
 
 /* Smart trainer. Power is read from the Cycling Power service. If the trainer also has the Fitness Machine
@@ -174,11 +176,31 @@ async function knownTrainers() {
   return list;
 }
 
+// Without Web Bluetooth, the button explains why instead: Chrome on Linux, for one, has it but switched off.
+const noBluetooth = bluetoothHelp({
+  bluetooth: navigator.bluetooth,
+  secure: window.isSecureContext,
+  userAgent: navigator.userAgent,
+  brave: !!navigator.brave,
+});
+if (noBluetooth) {
+  const box = $('bthelp');
+  $('bt').title = noBluetooth.title;
+  panel($('bt'), box, () => {
+    box.replaceChildren();
+    const h = document.createElement('h3');
+    h.textContent = noBluetooth.title;
+    box.append(h);
+    for (const step of noBluetooth.steps) {
+      const p = document.createElement('p');
+      p.textContent = step;
+      box.append(p);
+    }
+  });
+}
+
 $('bt').addEventListener('click', async () => {
-  if (!navigator.bluetooth) {
-    $('bt').textContent = 'Needs Chrome or Edge';
-    return;
-  }
+  if (noBluetooth) return;
   if (bike.busyJoin) return;
   bike.busyJoin = true;
   bike.tries = 99; // a click takes over from any automatic retry
@@ -220,5 +242,6 @@ $('bt').addEventListener('click', async () => {
     bike.busyJoin = false;
   }
 });
-btLabel();
+if (noBluetooth) $('bt').textContent = noBluetooth.label;
+else btLabel();
 setHills(HILLS * 100);
