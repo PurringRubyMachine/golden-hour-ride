@@ -4,7 +4,7 @@
 
 On a laptop's built-in Intel graphics, the ride stutters: most frames take 16.7 ms (60 fps), but about one in twenty takes most of a second, so it averages 8–9 fps and feels clunky. On a discrete graphics card (an RTX 2060) the same page holds 60 fps with no long frames, even at twice the resolution. Most riders' laptops have only the built-in graphics, so the ride must work there.
 
-The cause is not the browser, Three.js or JavaScript: the JavaScript takes about 1 ms a frame. The graphics chip is given far more geometry than it can draw.
+The cause is not the browser, Three.js or JavaScript: the JavaScript takes about 1 ms a frame. The graphics chip is given more work than it can do: too many pixels at full size, too much geometry, and shadows and post-processing that cost a lot whatever the size (see [After step 2](#after-step-2-what-limits-the-intel-chip)).
 
 ## What was measured
 
@@ -19,7 +19,7 @@ Chrome 158 on Ubuntu 22.04, 1920 × 1080, the valley at its start, 6 seconds aft
 | Intel, no shadows and no post-processing      |              18.3 |         0.2 s |
 | RTX 2060, valley or Leckhampton, any of these |                60 |         21 ms |
 
-The number of pixels hardly matters (a quarter of them changes nothing); the amount of geometry does. Each frame draws **7.7 million triangles** in the valley and **6.1 million** at Leckhampton, counting the shadow pass:
+(The "pixel ratio 1" row changed nothing because the window's pixel ratio was already 1: it did not test fewer pixels. See [After step 2](#after-step-2-what-limits-the-intel-chip), which did.) Each frame draws **7.7 million triangles** in the valley and **6.1 million** at Leckhampton, counting the shadow pass:
 
 | What                             | Valley              | Leckhampton          | Notes                                           |
 | -------------------------------- | ------------------- | -------------------- | ----------------------------------------------- |
@@ -35,14 +35,45 @@ Three things make it worse than it needs to be:
 - **The shadow pass draws the whole course.** The sun's shadow covers a 220 m square around the rider (`sky.js`), but every tree and the whole terrain are drawn into it, because nothing is culled.
 - **Every tree is drawn in full** at every distance: a pine 3 km away gets the same 300 triangles as one beside the road, for a few pixels.
 
+### After step 2: what limits the Intel chip
+
+Tiling (step 2) cut the triangles a lot, but the frame rate hardly moved:
+
+| Course      | Triangles before | After tiling | fps before | fps after |
+| ----------- | ---------------: | -----------: | ---------: | --------: |
+| Valley      |            7.7 M |        3.5 M |        8.6 |       9.2 |
+| Christmas   |            5.2 M |        1.3 M |        9.7 |      10.6 |
+| Leckhampton |            6.1 M |        3.7 M |        8.0 |       8.4 |
+
+So geometry was not the main limit. Switching each cost off in turn (the valley after tiling, Intel UHD 630):
+
+| Window      | What was switched off                      |  fps | Longest frame |
+| ----------- | ------------------------------------------ | ---: | ------------: |
+| 1920 × 1080 | nothing                                    |    8 |         1.5 s |
+| 1920 × 1080 | shadows                                    |   11 |         1.1 s |
+| 1920 × 1080 | post-processing                            |   13 |         0.9 s |
+| 1920 × 1080 | anti-aliasing / bloom / light shafts, each | 9–10 |     0.6–1.4 s |
+| 1920 × 1080 | meadow (2 M triangles)                     |    8 |         0.9 s |
+| 1920 × 1080 | trees                                      |   11 |         0.7 s |
+| 1920 × 1080 | post-processing, shadows, meadow and trees |   31 |        0.17 s |
+| 960 × 540   | nothing                                    |   16 |         0.6 s |
+| 640 × 360   | nothing                                    |   21 |         0.4 s |
+| 960 × 540   | post-processing, shadows and meadow        |   60 |         17 ms |
+
+- **Pixels matter most.** At full size, with almost nothing drawn (370,000 triangles), the chip still manages only 31 fps: the ground, sky, road and lighting cost too much per pixel at 1920 × 1080.
+- **Shadows and post-processing have a fixed cost too**: even at 640 × 360 with everything on, it's 21 fps.
+- **Fewer pixels and fewer effects together** give a steady 60.
+
+So the biggest lever is drawing fewer pixels on slow chips (a render scale below 1), with cheaper shadows and effects. That is now step 3; distant trees as pictures (formerly step 3) are now step 4, done only if the measurements after step 3 still call for it.
+
 ## Goals
 
-- Intel UHD 630 (and similar: Iris Xe, AMD's built-in Radeon) at 1920 × 1080: a steady 60 fps on the automatic setting, with no frame over 50 ms after the start.
+- Intel UHD 630 (and similar: Iris Xe, AMD's built-in Radeon) at 1920 × 1080: a steady 60 fps on the automatic setting, with no frame over 50 ms after the start. On a chip as slow as the UHD 630 that may mean Low.
 - A discrete card: looks as it does now.
 - No visible pop: things that change detail with distance do so gradually or where it can't be seen.
 - Screenshot tests keep working, with any baseline changes deliberate and explained.
 
-## The work, in order of payoff
+## The work
 
 ### 1. Measure (no change to the picture)
 
@@ -56,26 +87,20 @@ Three things make it worse than it needs to be:
 - **Terrain**: split the ground mesh into tiles the same way (8 × 8), sharing its vertex data, so it is culled in both passes too.
 - Expected: about 7.7 M → 3 M triangles in the valley (half the trees are behind the rider, and nearly all fall outside the shadow square). The screenshots should match exactly; if a few pixels differ from the drawing order changing, look, and update the baselines only if nothing visible has changed.
 
-### 3. Draw distant trees simply
-
-- **Far trees as pictures.** At start-up, render each tree kind (pine, snowy pine, broadleaf) once, from the side, into a small texture. Beyond a distance (`treeFar`, about 400 m) a tile draws its trees as two crossed quads with that picture (4 triangles, not 300), lit and fogged the same way. Tiles switch whole, and the switch is hidden by fading over 50 m (the picture and the full tree overlap with dithered transparency, which costs nothing extra with `alphaTest`).
-- **Trunks** stop beyond about 250 m: at that distance a trunk is under the crown and a pixel wide.
-- **Shadows from near trees only**: tiles beyond the shadow square don't cast anyway after step 2; pictures never cast shadows.
-- Expected: valley 3 M → under 1 M; Leckhampton likewise (its trunks are its biggest cost). This changes the far scenery slightly, so the three baselines are updated, after comparing the old and new pictures by eye.
-
-### 4. Quality settings, chosen automatically
+### 3. Quality settings, chosen automatically
 
 A new module, `src/render/quality.js`, with three levels. Every setting in them can change while riding, so the automatic choice never needs a reload:
 
-| Setting                | Low    | Medium  | High (as now) |
-| ---------------------- | ------ | ------- | ------------- |
-| Pixel ratio, at most   | 1      | 1.25    | 2             |
-| Shadows                | off    | 2048²   | 4096², soft   |
-| Bloom and light shafts | off    | on      | on            |
-| Anti-aliasing (MSAA)   | off    | 4×      | 4×            |
-| Meadow tufts           | 60,000 | 130,000 | 260,000       |
-| Full trees out to      | 250 m  | 400 m   | 700 m         |
-| Verge grass out to     | 140 m  | 200 m   | 230 m         |
+| Setting                                      | Low    | Medium       | High (as now)         |
+| -------------------------------------------- | ------ | ------------ | --------------------- |
+| Render scale (pixels drawn per screen pixel) | 0.5    | 0.7          | the screen's, up to 2 |
+| Shadows                                      | off    | 2048², sharp | 4096², soft           |
+| Bloom and light shafts                       | off    | on           | on                    |
+| Anti-aliasing (MSAA)                         | off    | 2×           | 4×                    |
+| Meadow tufts                                 | 60,000 | 130,000      | 260,000               |
+| Verge grass out to                           | 140 m  | 200 m        | 230 m                 |
+
+The render scale is the big one. Below 1, the picture is drawn smaller and the browser stretches it to the window, so it is a little softer; the head unit and buttons are not part of it and stay sharp. On a high-resolution laptop screen (pixel ratio 2), Medium draws an eighth of the pixels High does.
 
 (The lens pass, which does rain drops on the lens and the painted look, stays at every level: it is cheap, and the weather depends on it.)
 
@@ -83,6 +108,15 @@ A new module, `src/render/quality.js`, with three levels. Every setting in them 
 - **A Quality control** beside Hills: Auto, Low, Medium, High, remembered in this browser like Hills. `?quality=` sets it for one visit.
 - **Screenshot tests** use `?quality=high` (and so does `?freeze` unless told otherwise), so the baselines don't depend on the machine.
 - Meadow: draw the first _n_ tufts by setting `instanceCount` (the tufts are already in random order, so any first _n_ are spread evenly), and widen each tuft a little at lower counts so the field stays green.
+
+### 4. Draw distant trees simply (if still needed)
+
+Only if, after step 3, Medium on the Intel chip still drops frames because of trees (measured by switching them off), or High on a mid-range card does.
+
+- **Far trees as pictures.** At start-up, render each tree kind (pine, snowy pine, broadleaf) once, from the side, into a small texture. Beyond a distance (`treeFar`, about 400 m) a tile draws its trees as two crossed quads with that picture (4 triangles, not 300), lit and fogged the same way. Tiles switch whole, and the switch is hidden by fading over 50 m (the picture and the full tree overlap with dithered transparency, which costs nothing extra with `alphaTest`).
+- **Trunks** stop beyond about 250 m: at that distance a trunk is under the crown and a pixel wide.
+- **Shadows from near trees only**: tiles beyond the shadow square don't cast anyway after step 2; pictures never cast shadows.
+- Expected: valley 3.5 M → under 1 M triangles; Leckhampton likewise (its trunks are its biggest cost). This changes the far scenery slightly, so the three baselines are updated, after comparing the old and new pictures by eye.
 
 ### 5. Docs and guard rails
 
@@ -92,10 +126,11 @@ A new module, `src/render/quality.js`, with three levels. Every setting in them 
 
 ## Pull requests
 
-Two, so the change that mustn't alter the picture is reviewed alone:
+So that the change that mustn't alter the picture is reviewed alone:
 
-1. **Steps 1 and 2**: measuring, and tiles. Screenshots match. Numbers before and after in the description.
-2. **Steps 3 to 5**: distant trees, quality settings, docs. Baselines updated with before-and-after pictures.
+1. **Steps 1 and 2**: measuring, and tiles. Screenshots match (but for 3 pixels, from the drawing order). Numbers before and after in the description.
+2. **Steps 3 and 5**: quality settings and docs. Baselines unchanged (the tests use High).
+3. **Step 4**, if needed: distant trees, with baselines updated and before-and-after pictures.
 
 ## Risks
 
