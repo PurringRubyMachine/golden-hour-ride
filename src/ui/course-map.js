@@ -1,4 +1,4 @@
-// The course map: the loop from above with the rider on it, the height profile, and where on the loop the rider is.
+// The course map: the loop from above with the rider on it (a red dot), the height profile, and where on the loop the rider is.
 // The loop and profile are drawn once; only the rider's marks are redrawn as they move (updateMap, from ride.js).
 import { $ } from '../util/dom.js';
 import { LEN, N, P, at, mkPose } from '../course/road.js';
@@ -108,7 +108,17 @@ const prof = profile(
 const pose = mkPose();
 let lastS = NaN,
   lastText = '';
-// the rider's marks: an arrow on the loop, a line and dot on the profile, and the distance
+// the rider's marks: a red dot on the loop, a red line and dot on the profile, and the distance
+const RED = '#e8322a';
+const dot = (x, y, r) => {
+  og.beginPath();
+  og.arc(x, y, r, 0, Math.PI * 2);
+  og.fillStyle = RED;
+  og.fill();
+  og.strokeStyle = '#fff'; // a white ring keeps it clear on the light loop line
+  og.lineWidth = 1.5;
+  og.stroke();
+};
 export function updateMap(s) {
   if (box.hidden || Math.abs(s - lastS) < 5) return; // 5 m is under a pixel on the map: redraw only when it shows
   lastS = s;
@@ -116,32 +126,13 @@ export function updateMap(s) {
   og.setTransform(dpr, 0, 0, dpr, 0, 0);
   og.clearRect(0, 0, W, H);
   at(s, pose);
-  const [x, y] = toMap([pose.p.x, pose.p.z]),
-    [ax, ay] = toMap([pose.p.x + pose.t.x, pose.p.z + pose.t.z]),
-    a = Math.atan2(ay - y, ax - x);
-  og.translate(x, y);
-  og.rotate(a);
-  og.beginPath();
-  og.moveTo(7, 0);
-  og.lineTo(-5, 4.5);
-  og.lineTo(-2.5, 0);
-  og.lineTo(-5, -4.5);
-  og.closePath();
-  og.fillStyle = '#ffb070';
-  og.strokeStyle = 'rgba(0,0,0,0.6)';
-  og.lineWidth = 1.5;
-  og.stroke();
-  og.fill();
-  og.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dot(...toMap([pose.p.x, pose.p.z]), 4.5);
   const frac = (((s % LEN) + LEN) % LEN) / LEN,
     px = LX + frac * (W - LX),
     hy = prof.points[Math.min(prof.points.length - 1, Math.round(frac * (prof.points.length - 1)))][1];
-  og.fillStyle = 'rgba(255,176,112,0.8)';
+  og.fillStyle = 'rgba(232,50,42,0.75)';
   og.fillRect(px - 0.75, MAP_H, 1.5, PROF_H);
-  og.beginPath();
-  og.arc(px, MAP_H + hy, 3, 0, Math.PI * 2);
-  og.fillStyle = '#ffb070';
-  og.fill();
+  dot(px, MAP_H + hy, 3.5);
   const text = whereOnLoop(s, LEN);
   if (text !== lastText) label.textContent = lastText = text;
 }

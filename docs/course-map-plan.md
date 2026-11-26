@@ -6,7 +6,7 @@ Riders can't see where they are on a loop, or what's coming. On Gatineau the dis
 
 A small panel in the bottom-right corner, above the credits:
 
-- **The loop from above**, north up, fitted to the panel, with a dot for the rider and a small arrow for the direction of travel, and a tick where the course begins.
+- **The loop from above**, north up, fitted to the panel, with a red dot for the rider and a tick where the course begins.
 - **The height profile** of the whole loop underneath, with a line and dot at the rider's position, so the next climb is in sight; the lowest and highest heights at its side.
 - **Where you are on the loop**: "17.4 of 41.0 km", measured from the course's beginning (for Gatineau, P3), whatever the start.
 
