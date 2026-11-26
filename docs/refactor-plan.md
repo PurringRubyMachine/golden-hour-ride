@@ -312,9 +312,12 @@ Status: done.
 | Contributed courses with unclear data licences               | `credits` required by the validator; licence checklist in the pull request template                                                 |
 | Large course files bloat the repo                            | Binary terrain is about 0.75 MB for a 6 km square, a quarter smaller than today's base64. The validator warns above 5 MB per course |
 
+## Decided
+
+1. **The fork link stays**, and so does the README's link to the original repository.
+2. **Hosted on GitHub Pages**, from `main`; the README's live link points there.
+3. **The "Starry" weather is removed.** It only ever appeared on a local copy (localhost), unfinished: its button, key 5, voice command, the Van Gogh sky and the lens pass's painted look have gone.
+
 ## Open questions
 
-1. Keep the GitHub fork link (lets you offer changes back to the original) or make this a standalone repository?
-2. Host on GitHub Pages? The README's live link points to the original author's site.
-3. Keep the "Starry" weather that only appears on localhost, or finish it or remove it?
-4. Is a course contributed by pull request reviewed by you alone, or do you want a lighter process for courses than for code?
+1. Is a course contributed by pull request reviewed by you alone, or do you want a lighter process for courses than for code?
