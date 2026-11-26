@@ -6,7 +6,7 @@ import { fbm } from '../util/noise.js';
 import { uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
 import { XMAS, real } from '../course/course.js';
-import { nearRoad } from '../course/road.js';
+import { N, P, R, T, nearRoad } from '../course/road.js';
 import { TS, meshH } from '../course/terrain.js';
 import { XL_COLS, chalets, xl } from './chalets.js';
 import { onQuality } from '../render/quality.js';
@@ -209,7 +209,32 @@ export function nearTrees(cam) {
       if (!nr || nr.d > 5.5) spots.push([x, meshH(x, z), z]);
     } // mapped street and field trees
   }
-  for (let n = 0; n < (real ? 320000 : 70000) && spots.length < (real ? 26000 : 7000); n++) {
+  // A survey course's trees go where the map says there is woodland. If there's little of it, they cover it
+  // densely; if there's a lot (a forest park), the same number spread over it would stand far apart, so they are
+  // planted near the road instead, thinning with distance, where riders see them.
+  const BUDGET = real ? 26000 : 7000;
+  let alongRoad = false;
+  if (real) {
+    let wooded = 0,
+      all = 0;
+    for (let x = -TS * 0.39; x < TS * 0.39; x += 50)
+      for (let z = -TS * 0.39; z < TS * 0.39; z += 50, all++) if (real.wood(x, z)) wooded++;
+    const km2 = (wooded / all) * ((TS * 0.78) / 1000) ** 2;
+    alongRoad = km2 > 0 && BUDGET / km2 < 3000; // trees per km² of woodland if spread evenly
+  }
+  for (let n = 0; alongRoad && n < 600000 && spots.length < BUDGET; n++) {
+    const i = Math.floor(rnd() * N),
+      side = rnd() < 0.5 ? -1 : 1,
+      d = Math.min(1500, 11 - Math.log(1 - rnd()) * 150), // mostly close, sometimes far
+      j = (rnd() - 0.5) * 1.5,
+      x = P[i].x + R[i].x * side * d + T[i].x * j,
+      z = P[i].z + R[i].z * side * d + T[i].z * j;
+    if (Math.abs(x) > TS * 0.48 || Math.abs(z) > TS * 0.48) continue;
+    const nr = nearRoad(x, z);
+    if ((nr && nr.d < 11) || !real.wood(x, z) || built.has(cellKey(x, z))) continue; // another stretch of road
+    spots.push([x, meshH(x, z), z]);
+  }
+  for (let n = 0; !alongRoad && n < (real ? 320000 : 70000) && spots.length < BUDGET; n++) {
     const x = (rnd() - 0.5) * TS * 0.78,
       z = (rnd() - 0.5) * TS * 0.78,
       nr = nearRoad(x, z),
