@@ -9,9 +9,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
+import rasterio
 from pyproj import CRS, Transformer
 
-from . import BuildError, osm
+from . import BuildError, imagery, osm
 from .course import write, write_json
 from .dtm import Dtm
 from .frame import choose_crs, crs_name, square_around
@@ -44,6 +45,10 @@ class Options:
     smoke: list = field(default_factory=list)  # [(lat, lon), ...]
     credits: list = field(default_factory=list)  # [{text, licence, url?}, ...]
     keep_route: bool = False
+    imagery: list | None = None  # photos of the ground from above
+    imagery_credit: str | None = None
+    imagery_licence: str | None = None
+    imagery_url: str | None = None
     courses_dir: str = "courses"
     cache_dir: str = "tools/.cache"
 
@@ -93,6 +98,11 @@ def command_line(o, route):
         a += ["--start", _num(o.start)]
     if o.keep_route:
         a.append("--keep-route")
+    if o.imagery:
+        a += ["--imagery", *(shown(p) for p in o.imagery)]
+        a += ["--imagery-credit", o.imagery_credit, "--imagery-licence", o.imagery_licence]
+        if o.imagery_url:
+            a += ["--imagery-url", o.imagery_url]
     return shlex.join(a)
 
 
@@ -115,6 +125,8 @@ def round5(v):
 
 def build(o, log=print):
     """Build a course. Returns a summary of what was built; raises BuildError if the inputs won't do."""
+    if o.imagery and not (o.imagery_credit and o.imagery_licence):
+        raise BuildError("imagery needs a credit and a licence (--imagery-credit, --imagery-licence)")
     latlon = read_gpx(o.route)
     log(f"route: {len(latlon)} points from {o.route}")
 
@@ -176,6 +188,14 @@ def build(o, log=print):
     if o.heights_url:
         credits[0]["url"] = o.heights_url
     credits += o.credits
+    if o.imagery:
+        credits.append(
+            {
+                "text": o.imagery_credit,
+                "licence": o.imagery_licence,
+                **({"url": o.imagery_url} if o.imagery_url else {}),
+            }
+        )
 
     course = {
         "format": 1,
@@ -190,6 +210,12 @@ def build(o, log=print):
         "terrain": {"file": "terrain.bin", "size": frame.size, "cells": frame.cells},
         "road": "road.json",
     }
+    folder = Path(o.courses_dir) / o.id
+    if o.imagery:
+        course["imagery"] = imagery.bake(o.imagery, frame, folder, log)
+    elif (folder / imagery.FILE).exists():
+        (folder / imagery.FILE).unlink()  # an earlier build's photo: this course no longer has one
+        log(f"removed the earlier {shown(folder / imagery.FILE)} (built without --imagery)")
 
     scenery = osm_as_of = None
     options = {}
@@ -217,11 +243,20 @@ def build(o, log=print):
     problems = write(o.courses_dir, course, grid, road, scenery)
     if problems:
         raise BuildError("the course was written but doesn't validate: " + "; ".join(problems))
-    folder = Path(o.courses_dir) / o.id
     write_provenance(o, folder, crs_name(crs), dtm_files, osm_as_of, log)
     km = sum(math.dist((a[0], a[2]), (b[0], b[2])) for a, b in zip(road, road[1:] + road[:1])) / 1000
     log(f"wrote {o.courses_dir}/{o.id}/: {km:.1f} km")
     return {"course": course, "road": road, "heights": heights, "line": line, "frame": frame}
+
+
+def imagery_file(path):
+    """A photo as build.json records it: its name, and the scenes it was made from if the fetch noted them."""
+    entry = {"file": Path(path).name}
+    with rasterio.open(path) as src:  # (bake has read it already)
+        scenes = src.tags().get("scenes")
+    if scenes:
+        entry["scenes"] = scenes.split()
+    return entry
 
 
 def write_provenance(o, folder, working_crs, dtm_files, osm_as_of, log=print):
@@ -248,5 +283,6 @@ def write_provenance(o, folder, working_crs, dtm_files, osm_as_of, log=print):
         },
         "dtm": {"workingCrs": working_crs, "files": dtm_files},
         **({"openStreetMap": {"dataAsOf": osm_as_of}} if osm_as_of else {}),
+        **({"imagery": {"files": [imagery_file(p) for p in o.imagery]}} if o.imagery else {}),
     }
     write_json(folder / "build.json", info)

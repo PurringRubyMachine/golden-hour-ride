@@ -69,3 +69,12 @@ Every source goes into `docs/adding-a-course.md`'s table of sources, next to the
 - Is Sentinel-2's 10 m good enough at Gatineau's distances, or does the park need Québec's photos to look right? Step 2 shows it.
 - Do roads, car parks and buildings in the photo look wrong where they don't line up exactly with the road we draw? The near-road fade should hide that; if not, the builder can paint the photo's road out along our road line.
 - Snow, or leafless trees, in a photo would fight the summer evening: the builder takes summer photos only.
+
+## What happened
+
+**1. Builder and format** (this pull request):
+
+- `fetch-sentinel2` reads the course's square from the clearest summer scenes in the Earth Search catalogue (Sentinel-2 level 2A, its true-colour images), in a few seconds. For Gatineau one scene, 1 July 2024, covered the whole square.
+- `build --imagery` writes `ground.jpg`. Gatineau's is 4096 pixels across (3.3 m each), 2.4 MB at JPEG quality 76; it lines up with the road along every parkway.
+- **Colour.** Stretching each colour on its own, as planned ("white-balance"), turned the forest an unreal green and the lakes purple. The builder now stretches the brightness, red, green and blue together: dull photos are brought to a common range, and the colours stay true. Toning the summer green to the evening light is left to the ride (step 2).
+- `build.json` records the photo's file and the scenes it was made from.

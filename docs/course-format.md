@@ -17,12 +17,13 @@ courses/
     terrain.bin         survey courses: ground heights
     road.json           survey courses: the road line
     scenery.json        optional: buildings, trees, hedges and walls, woodland
+    ground.jpg          optional: the ground photographed from above
     build.json          written by the course builder: where the course came from (the app ignores it)
     route.gpx           optional: the route, if the builder was asked to keep it (--keep-route)
     README.md           optional: notes on the course and its sources
 ```
 
-The app reads only the first four. `build.json` records the build: the command (paths relative to the project, or bare file names), the GPX's SHA-256 and whether it was kept, the working coordinate system and the DTM files by name, and how current the OpenStreetMap data was (`openStreetMap.dataAsOf`, Overpass's timestamp). It isn't checked by the validators, so it isn't part of format 1.
+The app reads only the first five. `build.json` records the build: the command (paths relative to the project, or bare file names), the GPX's SHA-256 and whether it was kept, the working coordinate system and the DTM files by name, and how current the OpenStreetMap data was (`openStreetMap.dataAsOf`, Overpass's timestamp). It isn't checked by the validators, so it isn't part of format 1.
 
 `<id>` is lower-case letters, digits and hyphens, such as `leckhampton` or `mont-ventoux-bedoin`. It is what `?course=<id>` takes.
 
@@ -75,6 +76,7 @@ Survey courses are in local metres around the centre of the terrain square: **x 
 | `terrain`     | survey only     | `{ "file", "size", "cells", "min", "max" }`: see [terrain.bin](#terrainbin).                                                         |
 | `road`        | survey only     | The road file's name: see [road.json](#roadjson).                                                                                    |
 | `scenery`     | no              | `{ "file"?, "style", "options"? }`: see [Scenery](#scenery).                                                                         |
+| `imagery`     | no              | `{ "file", "size" }`: a photo of the ground from above; see [ground.jpg](#groundjpg).                                                |
 | `credits`     | yes             | A list of `{ "text", "licence", "url"? }`. The texts are shown on screen, joined by spaces. Survey courses must credit every source. |
 
 A procedural course has only `format`, `id`, `name`, `shortName`, `description`, `kind`, `generator`, `loop`, `start` and `credits` (which may be empty: there is no outside data to credit).
@@ -127,6 +129,14 @@ Optional, and every key in it is optional. All positions are local metres.
 
 Note: the app doesn't draw buildings yet. They're switched off for Leckhampton's 19th-century look (`SHOW_TOWN` in `src/scenery/buildings.js`), and for now they only keep trees off them. They're kept in the data so that a future scenery style can draw them.
 
+## ground.jpg
+
+Optional: the terrain square photographed from above (an aerial photo or a satellite image), which the app shows in the distance in place of the ground's own colours. `course.json` names it in `imagery`: `{ "file": "ground.jpg", "size": 4096 }`.
+
+- A JPEG, `size` × `size` pixels, covering the terrain square exactly: row 0 is the north edge, each row runs west to east, as in `terrain.bin`. The builder makes it a power of two at most 4096 across, at about 4 m per pixel or finer.
+- Its brightness evened out (the builder stretches it to a common range) so photos from different sources look alike in the scene.
+- Its source credited in `credits`, like every other source.
+
 ## index.json
 
 The course menu's list, in the order shown. The valley comes first: it is the default.
@@ -142,7 +152,7 @@ The course menu's list, in the order shown. The valley comes first: it is the de
 
 ## Size
 
-The terrain is about 0.75 MB for a 6 km square, and a road line a few tens of kilobytes. Scenery from OpenStreetMap is a few hundred kilobytes in the countryside. Keep a course under about 5 MB: a larger terrain square (a long route) is the usual cause, and a smaller `--margin` the usual cure.
+The terrain is about 0.75 MB for a 6 km square, and a road line a few tens of kilobytes. Scenery from OpenStreetMap is a few hundred kilobytes in the countryside. A photo of the ground is at most about 2.5 MB (the builder lowers its quality to fit). Keep a course under about 5 MB, plus the photo: a larger terrain square (a long route) is the usual cause, and a smaller `--margin` the usual cure.
 
 ## What may change
 
