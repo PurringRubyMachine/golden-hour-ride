@@ -1,4 +1,4 @@
-"""The course builder's command line: python -m tools.coursebuilder {build,validate,fetch-ea} ..."""
+"""The course builder's command line: python -m tools.coursebuilder {build,validate,fetch-ea,fetch-hrdem} ..."""
 
 import argparse
 import json
@@ -93,6 +93,11 @@ def parser():
     e.add_argument("--route", required=True, help="the route as a GPX file")
     e.add_argument("--out", required=True, help="folder for the tiles; pass it to build --dtm")
     e.add_argument("--margin", type=float, default=1300, metavar="METRES", help="terrain around the route (1300)")
+
+    c = sub.add_parser("fetch-hrdem", help="read Natural Resources Canada's HRDEM terrain model for a route in Canada")
+    c.add_argument("--route", required=True, help="the route as a GPX file")
+    c.add_argument("--out", required=True, help="folder for the tiles; pass it to build --dtm")
+    c.add_argument("--margin", type=float, default=1300, metavar="METRES", help="terrain around the route (1300)")
     return p
 
 
@@ -119,6 +124,15 @@ def cmd_validate(a):
     return 1 if failed else 0
 
 
+def cmd_fetch_hrdem(a):
+    from . import hrdem
+    from .gpx import read_gpx
+
+    hrdem.fetch(read_gpx(a.route), a.out, a.margin)
+    print("Build with:  --dtm", a.out, " ".join(f'"{v}"' if " " in v else v for v in hrdem.CREDIT_ARGS))
+    return 0
+
+
 def cmd_fetch_ea(a):
     from . import ea
     from .gpx import read_gpx
@@ -131,7 +145,13 @@ def cmd_fetch_ea(a):
 def main(argv=None):
     a = parser().parse_args(argv)
     try:
-        return {"build": cmd_build, "validate": cmd_validate, "fetch-ea": cmd_fetch_ea}[a.command](a)
+        commands = {
+            "build": cmd_build,
+            "validate": cmd_validate,
+            "fetch-ea": cmd_fetch_ea,
+            "fetch-hrdem": cmd_fetch_hrdem,
+        }
+        return commands[a.command](a)
     except BuildError as ex:
         print(f"error: {ex}", file=sys.stderr)
         return 2

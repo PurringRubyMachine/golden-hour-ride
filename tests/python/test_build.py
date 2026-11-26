@@ -212,3 +212,14 @@ def test_keep_route_copies_the_gpx_and_rebuilds_from_it(options, tmp_path, monke
     # rebuilding from another GPX without --keep-route removes the old copy
     build(options(), log=lambda *_: None)
     assert not (folder / "route.gpx").exists()
+
+
+def test_sparse_gpx_gets_a_warning(options, tmp_path):
+    write_dtm(tmp_path / "dtm" / "plane.tif", UTM, WEST, NORTH, 2, SPAN // 2, SPAN // 2)
+    sparse = write_gpx(tmp_path / "turns.gpx", square_route(step=300))  # a point every 300 m: corners and middles
+    logged = []
+    build(options(route=str(sparse)), log=logged.append)
+    assert any(line.startswith("warning: the GPX's points are") for line in logged)
+    logged.clear()
+    build(options(), log=logged.append)
+    assert not any(line.startswith("warning") for line in logged)

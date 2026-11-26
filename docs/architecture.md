@@ -82,11 +82,12 @@ Each frame, `ride.js`:
 | `route.py`    | Removes spurs, resamples every 5 m, closes the loop.                                                            |
 | `frame.py`    | Chooses the working coordinate system and the terrain square.                                                   |
 | `dtm.py`      | Reads DTM files of any format and coordinate system; fine heights by the road; the terrain grid; filling holes. |
-| `road.py`     | Road surface heights, smoothing and statistics.                                                                 |
-| `osm.py`      | OpenStreetMap features from Overpass, cached, and the woodland mask.                                            |
+| `road.py`     | Road surface heights, straight across bridges, smoothing and statistics.                                        |
+| `osm.py`      | OpenStreetMap features from Overpass, cached: scenery, the woodland mask, and road bridges.                     |
 | `course.py`   | Writes the course folder and the index.                                                                         |
 | `validate.py` | The format checks.                                                                                              |
 | `ea.py`       | `fetch-ea`: Environment Agency LiDAR tiles for England.                                                         |
+| `hrdem.py`    | `fetch-hrdem`: Natural Resources Canada's HRDEM, read in pieces from its cloud-optimised mosaics.               |
 | `build.py`    | The build, step by step; `__main__.py` is the command line.                                                     |
 
 ## Tests

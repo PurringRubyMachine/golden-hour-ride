@@ -39,6 +39,59 @@ def surface_heights(line, height_at):
     return out
 
 
+def across_bridges(line, heights, bridges, near=10, angle=30):
+    """Heights drawn straight across bridges, instead of dipping to the ground beneath them.
+
+    A point counts as on a bridge when it is within `near` metres of one and the bridge runs the same way as the road
+    there (within `angle` degrees), so a road that passes under a bridge is left alone. Each run of bridge points,
+    plus one point each side for the abutments, is replaced by a straight line between the heights just beyond it.
+    Returns the new heights and how many bridges were crossed.
+    """
+    n = len(line)
+    segs = [(a, b) for bridge in bridges for a, b in zip(bridge, bridge[1:]) if math.dist(a, b) > 0.1]
+    if not segs:
+        return list(heights), 0
+    cos_max = math.cos(math.radians(angle))
+    cell = 50.0  # a grid of the segments, so each point only checks the bridges near it
+    grid = {}
+    for seg in segs:
+        (ax, ay), (bx, by) = seg
+        for i in range(math.floor((min(ax, bx) - near) / cell), math.floor((max(ax, bx) + near) / cell) + 1):
+            for j in range(math.floor((min(ay, by) - near) / cell), math.floor((max(ay, by) + near) / cell) + 1):
+                grid.setdefault((i, j), []).append(seg)
+    on = [False] * n
+    for k, ((x, y), (nx, ny)) in enumerate(zip(line, normals(line))):
+        tx, ty = ny, -nx  # direction of travel
+        for (ax, ay), (bx, by) in grid.get((math.floor(x / cell), math.floor(y / cell)), ()):
+            dx, dy = bx - ax, by - ay
+            length = math.hypot(dx, dy)
+            t = max(0.0, min(1.0, ((x - ax) * dx + (y - ay) * dy) / (length * length)))
+            if math.hypot(ax + t * dx - x, ay + t * dy - y) <= near and abs(tx * dx + ty * dy) / length >= cos_max:
+                on[k] = True
+                break
+    if all(on):
+        return list(heights), 0  # a loop entirely on bridges: nothing to measure from
+    out = list(heights)
+    start = on.index(False)  # walk round the loop from a point off any bridge, so runs that wrap are whole
+    runs, k = [], 0
+    while k < n:
+        i = (start + k) % n
+        if on[i]:
+            j = k
+            while j + 1 < n and on[(start + j + 1) % n]:
+                j += 1
+            runs.append((k, j))
+            k = j + 1
+        else:
+            k += 1
+    for a, b in runs:
+        lo, hi = a - 2, b + 2  # one point beyond each end for the abutment, and the height just past it
+        h0, h1 = heights[(start + lo) % n], heights[(start + hi) % n]
+        for k in range(lo + 1, hi):
+            out[(start + k) % n] = h0 + (h1 - h0) * (k - lo) / (hi - lo)
+    return out, len(runs)
+
+
 def smooth(heights):
     """A 5-point median (25 m) to drop spikes, then two passes of a 7-point moving average (35 m), round the loop."""
     n = len(heights)

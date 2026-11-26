@@ -23,19 +23,19 @@ Any raster GDAL can read works: GeoTIFF (any compression), ASCII grid, IMG, VRT 
 
 Free sources (check each source's own terms; the licence identifiers here are for `--heights-licence`):
 
-| Where         | Source                                                                                                           | Licence                      |
-| ------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| England       | Environment Agency LiDAR Composite DTM ([survey portal](https://environment.data.gov.uk/survey)): use `fetch-ea` | `OGL-UK-3.0`                 |
-| Scotland      | [Scottish Remote Sensing Portal](https://remotesensingdata.gov.scot/)                                            | `OGL-UK-3.0`                 |
-| Wales         | [DataMapWales](https://datamap.gov.wales/) LiDAR                                                                 | `OGL-UK-3.0`                 |
-| Canada        | NRCan [HRDEM](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b) (CanElevation)        | `OGL-Canada-2.0`             |
-| United States | USGS 3DEP, from [The National Map downloader](https://apps.nationalmap.gov/downloader/)                          | Public domain                |
-| France        | IGN [RGE ALTI](https://geoservices.ign.fr/rgealti)                                                               | `etalab-2.0`                 |
-| Switzerland   | swisstopo [swissALTI3D](https://www.swisstopo.admin.ch/en/height-model-swissalti3d)                              | Free use, credit "swisstopo" |
-| Netherlands   | [AHN](https://www.ahn.nl/)                                                                                       | `CC0-1.0`                    |
-| Denmark       | [Dataforsyningen](https://dataforsyningen.dk/) (DHM)                                                             | See the site                 |
-| Norway        | [Høydedata](https://hoydedata.no/)                                                                               | `CC-BY-4.0`                  |
-| Spain         | CNIG [Centro de Descargas](https://centrodedescargas.cnig.es/) (MDT)                                             | `CC-BY-4.0`                  |
+| Where         | Source                                                                                                                       | Licence                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| England       | Environment Agency LiDAR Composite DTM ([survey portal](https://environment.data.gov.uk/survey)): use `fetch-ea`             | `OGL-UK-3.0`                 |
+| Scotland      | [Scottish Remote Sensing Portal](https://remotesensingdata.gov.scot/)                                                        | `OGL-UK-3.0`                 |
+| Wales         | [DataMapWales](https://datamap.gov.wales/) LiDAR                                                                             | `OGL-UK-3.0`                 |
+| Canada        | NRCan [HRDEM](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b) (CanElevation): use `fetch-hrdem` | `OGL-Canada-2.0`             |
+| United States | USGS 3DEP, from [The National Map downloader](https://apps.nationalmap.gov/downloader/)                                      | Public domain                |
+| France        | IGN [RGE ALTI](https://geoservices.ign.fr/rgealti)                                                                           | `etalab-2.0`                 |
+| Switzerland   | swisstopo [swissALTI3D](https://www.swisstopo.admin.ch/en/height-model-swissalti3d)                                          | Free use, credit "swisstopo" |
+| Netherlands   | [AHN](https://www.ahn.nl/)                                                                                                   | `CC0-1.0`                    |
+| Denmark       | [Dataforsyningen](https://dataforsyningen.dk/) (DHM)                                                                         | See the site                 |
+| Norway        | [Høydedata](https://hoydedata.no/)                                                                                           | `CC-BY-4.0`                  |
+| Spain         | CNIG [Centro de Descargas](https://centrodedescargas.cnig.es/) (MDT)                                                         | `CC-BY-4.0`                  |
 
 Only data you're allowed to share can go in a course: the course contains heights derived from it and is published with the app.
 
@@ -63,12 +63,12 @@ That includes GDAL (inside rasterio's wheels), so there's nothing else to instal
 
 1. reads the GPX, removes out-and-back spurs, and resamples the loop every 5 m;
 2. picks a coordinate system to work in: the DTM's own if it's in metres and true to scale there, otherwise the local UTM zone;
-3. finds the road surface across the road every 5 m, smooths it, and reports the climbing and steepest gradients;
+3. finds the road surface across the road every 5 m, draws it straight across the bridges OpenStreetMap marks (the DTM is the ground beneath them), smooths it, and reports the climbing and steepest gradients;
 4. builds a 10 m terrain grid, filling small holes;
 5. fetches buildings, woods, single trees, hedges and walls from OpenStreetMap (`--no-osm` to skip), and credits OpenStreetMap;
 6. writes `courses/my-loop/`, adds it to `courses/index.json`, and validates it.
 
-Read what it prints. Climbing and gradients should be what you'd expect of the road; a 40 % ramp on a lane means something is wrong (often a DSM instead of a DTM, or a bridge).
+Read what it prints. Climbing and gradients should be what you'd expect of the road; a 40 % ramp on a lane means something is wrong (often a DSM instead of a DTM, or a bridge missing from OpenStreetMap). If it warns that the GPX's points are far apart, the file is a list of turns rather than a track: export the track instead (on Ride with GPS, "GPX Track", not "GPX Route").
 
 Credit every source: add `--credit "Route drawn on OpenStreetMap|ODbL-1.0|https://www.openstreetmap.org/copyright"` if you drew the route over OpenStreetMap, and anything else you used.
 
@@ -106,17 +106,18 @@ The service is free and sometimes slow; `fetch-ea` waits and tries again, and on
 
 ### Example: Canada (HRDEM)
 
-Download the **DTM** tiles that cover the loop and its surroundings from the [HRDEM dataset](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b) into a folder, then:
+`fetch-hrdem` reads Natural Resources Canada's [HRDEM](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b) terrain model for a route (2 m tiles along the road, 10 m around it) and prints the credit options to use. The mosaics are cloud-optimised files of whole provinces; it reads only the pieces the route needs, in seconds:
 
 ```bash
-.venv/bin/python -m tools.coursebuilder build --id gatineau-loop --name "Gatineau Park loop" --route gatineau.gpx \
-    --dtm hrdem/ \
+.venv/bin/python -m tools.coursebuilder fetch-hrdem --route my-loop.gpx --out tools/.cache/hrdem-my-loop
+.venv/bin/python -m tools.coursebuilder build --id my-loop --name "My Loop" --route my-loop.gpx \
+    --dtm tools/.cache/hrdem-my-loop \
     --heights-credit "Heights: Natural Resources Canada HRDEM, Open Government Licence – Canada." \
     --heights-licence OGL-Canada-2.0 \
     --heights-url https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b
 ```
 
-The national HRDEM mosaic is in Canada Atlas Lambert (EPSG:3979), which stretches distances by about half a percent in southern Canada; the builder sees that and works in the local UTM zone instead, so the road's length and gradients come out right. Heights are CGVD2013, which doesn't matter: the ride only uses differences in height.
+[courses/gatineau-park-loop/](../courses/gatineau-park-loop/) was built this way. The HRDEM mosaic is in Canada Atlas Lambert (EPSG:3979), which stretches distances by about half a percent in southern Canada; the builder sees that and works in the local UTM zone instead, so the road's length and gradients come out right. Heights are CGVD2013, which doesn't matter: the ride only uses differences in height.
 
 ## 5. Ride it
 

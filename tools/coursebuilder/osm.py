@@ -1,4 +1,4 @@
-"""Scenery from OpenStreetMap: buildings, single trees, woodland, hedges and walls.
+"""Scenery from OpenStreetMap: buildings, single trees, woodland, hedges and walls; and road bridges.
 
 Fetched from the Overpass API for the terrain square and cached, so a rebuild doesn't fetch again.
 OpenStreetMap data is © OpenStreetMap contributors, under the ODbL.
@@ -212,6 +212,29 @@ def woods_mask(frame, woods, holes):
         if v:
             bits[i >> 3] |= 1 << (i & 7)
     return base64.b64encode(bytes(bits)).decode()
+
+
+def bridge_query(south, west, north, east):
+    box = f"({south:.6f},{west:.6f},{north:.6f},{east:.6f})"
+    return f"""[out:json][timeout:180];
+way["highway"]["bridge"]["bridge"!="no"]{box};
+out geom;"""
+
+
+def bridges(frame, cache_dir):
+    """Road bridges in the terrain square, as lines in working coordinates: [[(x, y), ...], ...].
+
+    A DTM is the bare ground, so it has no bridges in it: where a road crosses a valley on one, the DTM's heights
+    dip into the valley. The build draws the road straight across instead (road.across_bridges).
+    """
+    west, south, east, north = frame.bounds_lonlat()
+    data = fetch(bridge_query(south, west, north, east), cache_dir)
+    to_xy = frame.lonlat()
+    return [
+        [to_xy.transform(p["lon"], p["lat"], direction="INVERSE") for p in e["geometry"]]
+        for e in data.get("elements", [])
+        if e.get("type") == "way" and len(e.get("geometry", [])) >= 2
+    ]
 
 
 def scenery(frame, road_xz, cache_dir):

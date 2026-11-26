@@ -62,6 +62,7 @@ class Dtm:
         self.sources.sort(key=pixel_metres, reverse=True)  # coarsest first, so finer files overwrite it
         self.crs = crs
         self._tiles = {}
+        self._bounds = {}  # each file's bounds in the working system, worked out once: see bounds()
 
     def first_crs(self):
         """The coordinate system of the first file given."""
@@ -71,13 +72,21 @@ class Dtm:
         for src in self.sources:
             src.close()
 
+    def bounds(self, src):
+        """A file's bounds in the working coordinate system. Cached: a long route asks for every file's bounds for
+        each of hundreds of fine tiles, and converting them each time took most of the build."""
+        key = (src.name, self.crs)
+        if key not in self._bounds:
+            self._bounds[key] = transform_bounds(src.crs, self.crs, *src.bounds)
+        return self._bounds[key]
+
     def grid(self, west, north, res, width, height, resampling):
         """Heights on a grid whose top-left pixel corner is (west, north), NaN where there is no data."""
         out = np.full((height, width), np.nan, dtype=np.float32)
         transform = from_origin(west, north, res, res)
         box = (west, north - height * res, west + width * res, north)
         for src in self.sources:
-            b = transform_bounds(src.crs, self.crs, *src.bounds)
+            b = self.bounds(src)
             if b[0] > box[2] or b[2] < box[0] or b[1] > box[3] or b[3] < box[1]:
                 continue  # this file doesn't reach the grid
             layer = np.full_like(out, np.nan)
