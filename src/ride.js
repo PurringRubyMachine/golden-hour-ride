@@ -18,7 +18,7 @@ import { audio } from './audio.js';
 import { XMAS } from './course/course.js';
 import { onQuality, quality, qualityFrame } from './render/quality.js';
 import { nearTrees } from './scenery/trees.js';
-import { terrainDetail } from './course/terrain.js';
+import { photoPending, terrainDetail } from './course/terrain.js';
 import { updateMap } from './ui/course-map.js';
 
 const V3 = THREE.Vector3;
@@ -138,7 +138,7 @@ function tick() {
       c.mesh = null;
     }
   }
-  st.pending = pending;
+  st.pending = pending + photoPending();
   nearTrees(camera.position);
   terrainDetail(camera.position);
 

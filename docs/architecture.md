@@ -46,7 +46,7 @@ The app treats both kinds of course the same way through `course.json`: a `proce
 
 `real` is the survey course's data: `size`, `cells` and `h` (heights), `road`, `buildings`, `trees`, `lines`, and `wood(x, z)`. Modules check `real` to choose between surveyed and generated ground, and `course.scenery.style` for how to dress it.
 
-Trees go where `wood(x, z)` says there is woodland, at most 26,000 of them. Where there is little woodland they cover it evenly; where there is a lot (more than about 9 km², as in Gatineau Park), they are planted near the road instead, thinning with distance. Beyond about 150 m, wooded ground is drawn in a canopy colour, so distant forest reads as forest.
+Trees go where `wood(x, z)` says there is woodland, at most 26,000 of them. Where there is little woodland they cover it evenly; where there is a lot (more than about 9 km², as in Gatineau Park), they are planted near the road instead, thinning with distance. Beyond about 150 m, wooded ground is drawn in a canopy colour, so distant forest reads as forest. A course with a photo of the ground from above (`ground.jpg`, see the course format) has its ground coloured from the photo instead beyond 60–80 m, with a light tint of it nearer; the photo loads after the ride starts and fades in.
 
 ## Random numbers
 
