@@ -12,6 +12,9 @@ export function panel(btn, box, draw) {
     }
     if (show) {
       draw?.();
+      // just below the controls, which wrap onto a second row in narrower windows
+      const bar = btn.closest('#ctl');
+      if (bar) box.style.top = Math.round(bar.getBoundingClientRect().bottom + 8) + 'px';
       box.hidden = false;
       btn.classList.add('on');
     }

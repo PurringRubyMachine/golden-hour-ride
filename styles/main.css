@@ -222,3 +222,8 @@ body.clean {
   max-width: 46vw;
   text-align: right;
 }
+.panel p {
+  margin: 0 0 8px;
+  line-height: 1.45;
+  user-select: text;
+}
