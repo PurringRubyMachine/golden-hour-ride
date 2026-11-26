@@ -205,11 +205,53 @@ canvas#c {
 body.clean #hud,
 body.clean #ctl,
 body.clean .panel,
+body.clean #map,
 body.clean #credit {
   display: none;
 }
 body.clean {
   cursor: none;
+}
+/* the course map: bottom right, above the credits */
+#map {
+  position: fixed;
+  right: 14px;
+  bottom: 44px;
+  width: 200px;
+  height: 174px;
+  padding: 8px 8px 22px;
+  border-radius: 14px;
+  background: rgba(20, 16, 12, 0.5); /* no backdrop blur: it would re-blur the ride behind it every frame */
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  box-sizing: content-box;
+}
+#map[hidden] {
+  display: none;
+}
+#map canvas {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+}
+#map .where {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  opacity: 0.85;
+}
+/* on a narrow screen, smaller, and above the numbers */
+@media (max-width: 760px) {
+  #map {
+    bottom: 96px;
+    transform: scale(0.75);
+    transform-origin: bottom right;
+  }
 }
 #credit {
   position: fixed;

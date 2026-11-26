@@ -31,6 +31,7 @@ import './devices/ftms.js';
 import './devices/trainer.js';
 import './ui/ride-log.js';
 import './ui/course-menu.js';
+import './ui/course-map.js';
 import './ui/voice.js';
 import './audio.js';
 import './ride.js';

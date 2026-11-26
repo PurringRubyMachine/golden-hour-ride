@@ -25,3 +25,10 @@ It hides with everything else (Hide info, H, "hide"), and a **Map** button (and 
 - Ride: the dot follows the road on every course, including Skip and the Christmas valley; the panel at phone width doesn't cover the numbers; Hide info hides it; the Map button and M key toggle it and the choice is remembered.
 - Screenshots change: the panel is in the picture. Compare and update the baselines.
 - Frame rate unchanged at Low on the Intel chip.
+
+## What happened
+
+- Built as planned. The total length is the ride's own (the smooth curve through the road's points), so Gatineau reads "of 41.1 km" where the course menu, from the straight lines between the points, says 41.0.
+- The height labels sit in a margin left of the profile, clear of the line.
+- At phone width the map is smaller and sits just above the numbers.
+- **Frame rate.** At Low on the Intel chip the courses stay at 58–60 fps. Some runs, with or without the map, have one freeze of over a second (on `main` too: one run in five on Gatineau), so it is not the map's; it is worth looking into separately. Still, the map's panel has no backdrop blur (which would re-blur the ride behind it every frame), and its marks redraw only every 5 m, under a pixel on the map.

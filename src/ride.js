@@ -19,6 +19,7 @@ import { XMAS } from './course/course.js';
 import { onQuality, quality, qualityFrame } from './render/quality.js';
 import { nearTrees } from './scenery/trees.js';
 import { terrainDetail } from './course/terrain.js';
+import { updateMap } from './ui/course-map.js';
 
 const V3 = THREE.Vector3;
 
@@ -165,6 +166,7 @@ function tick() {
     $('h-di').textContent = (st.dist / 1000).toFixed(2);
   }
 
+  updateMap(st.s);
   composer.render();
   st.stats.calls = renderer.info.render.calls;
   st.stats.triangles = renderer.info.render.triangles;

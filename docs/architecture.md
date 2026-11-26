@@ -36,7 +36,7 @@ If a course is broken, `course.js` puts the reason in place of the loading messa
 | `physics.js`         | Speed from power and gradient. Pure: no DOM, no Three.js, unit-tested.                                                                             |
 | `devices/ftms.js`    | Smart trainer messages (Bluetooth FTMS). Pure, unit-tested.                                                                                        |
 | `devices/trainer.js` | The Bluetooth connection: power in, gradient out, reconnects.                                                                                      |
-| `ui/*`               | Keys and buttons, the course menu, the ride log, voice commands, and the drop-down panels.                                                         |
+| `ui/*`               | Keys and buttons, the course menu and map, the ride log, voice commands, and the drop-down panels.                                                 |
 | `state.js`           | The ride's state (`st`), shared by the controls, the loop and the tests as `window.ride`.                                                          |
 | `ride.js`            | The frame loop: speed, camera, nearby grass, drawing.                                                                                              |
 
