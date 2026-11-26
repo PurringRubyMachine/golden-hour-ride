@@ -4,7 +4,7 @@ An indoor cycling ride that runs in the browser (Three.js). Ride an invented mou
 
 Live: https://purringrubymachine.github.io/golden-hour-ride/ · Leckhampton loop: https://purringrubymachine.github.io/golden-hour-ride/?course=leckhampton
 
-This project is a fork of [jamiemarsland/golden-hour-ride](https://github.com/jamiemarsland/golden-hour-ride) by Jamie Marsland, who wrote the original ride. The fork is being refactored so it is easier to maintain and so anyone with a LiDAR terrain model can add their own course: see [docs/refactor-plan.md](docs/refactor-plan.md).
+This project is a fork of [jamiemarsland/golden-hour-ride](https://github.com/jamiemarsland/golden-hour-ride) by Jamie Marsland, who wrote the original ride. The fork has been refactored so it is easier to maintain, and so anyone with a LiDAR terrain model can add their own course: see [docs/adding-a-course.md](docs/adding-a-course.md).
 
 ## What's in it
 
@@ -54,7 +54,7 @@ python3 -m venv .venv
 .venv/bin/pytest                        # the builder's tests, a few seconds
 ```
 
-For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Environment Agency LiDAR for it and prints the credit options to use. `build --help` lists the rest: pastoral scenery, smoke, the start point, and turning off OpenStreetMap features. A full walkthrough is coming in phase 5 of `docs/refactor-plan.md`.
+For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Environment Agency LiDAR for it and prints the credit options to use. `build --help` lists the rest: pastoral scenery, smoke, the start point, and turning off OpenStreetMap features. The full walkthrough, with free DTM sources for many countries, is [docs/adding-a-course.md](docs/adding-a-course.md).
 
 ## Layout
 
@@ -67,11 +67,13 @@ For a route in England, `fetch-ea --route my-loop.gpx --out dtm/` downloads Envi
   - `ui/` – controls, course menu, ride log and voice
   - `physics.js` – the speed model; `weather.js`; `ride.js` – the frame loop
 - `styles/` – the page's CSS.
-- `courses/` – one folder per course; `index.json` lists them for the menu. The format is described in `docs/refactor-plan.md` (course format, version 1).
+- `courses/` – one folder per course; `index.json` lists them for the menu. The format is described in [docs/course-format.md](docs/course-format.md).
 - `assets/` – textures.
 - `tests/` – unit tests (`unit/`) and screenshot tests (`visual/`).
 - `tools/coursebuilder/` – the course builder: a GPX route and LiDAR DTM files in, a course folder out (see below).
-- `docs/` – plans and design notes.
+- `docs/` – [architecture](docs/architecture.md), [course format](docs/course-format.md), [adding a course](docs/adding-a-course.md), and the [refactor plan](docs/refactor-plan.md).
+
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits
 

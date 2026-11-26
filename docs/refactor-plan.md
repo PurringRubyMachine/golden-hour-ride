@@ -68,6 +68,8 @@ docs/                      course-format.md, adding-a-course.md, architecture.md
 
 ## Course format, version 1
 
+The specification is now [course-format.md](course-format.md). This section is the original design, kept for the record.
+
 A course is a folder under `courses/<id>/`. The app fetches files; there are no more globals.
 
 `course.json`:
@@ -262,16 +264,41 @@ Status: done.
 
 ### Phase 5: documentation and CI
 
+Status: done.
+
+- **New files:** `docs/course-format.md`, `docs/adding-a-course.md`, `docs/architecture.md`, `CONTRIBUTING.md`, a pull request template, two issue forms, and `.github/workflows/ci.yml`.
+- **A bug fixed along the way:** hedges and walls were only drawn on courses that also had buildings.
+
 - `docs/adding-a-course.md`: a step-by-step walkthrough with sources of free DTM data (Environment Agency, Scottish Remote Sensing Portal, USGS 3DEP, IGN RGE ALTI, swisstopo swissALTI3D and others), checking the result locally, and opening a pull request.
 - `docs/course-format.md`, `docs/architecture.md`, `CONTRIBUTING.md`, and pull request and issue templates (including a "new course" checklist covering licence and credits).
 - GitHub Actions on each pull request: ESLint and Prettier, `node --test`, ruff and pytest, and validating every course in `courses/` (data checks only, so the cost stays negligible however many courses there are).
 - Visual tests run locally at first. GPU rendering in CI (SwiftShader) differs from desktop GPUs; they can join CI later with a tolerance tuned for SwiftShader.
 
+#### How phase 5 is done
+
+- **`docs/course-format.md`** becomes the specification. It covers every field, the local frame, what each scenery entry means, and what the validators check. The format section in this plan then points to it.
+- **`docs/adding-a-course.md`**:
+  - The steps: get a GPX, get a DTM, install the builder, build, ride it locally, tune it, and open a pull request.
+  - A table of free DTM sources with their licences. The links were checked when writing.
+  - A worked example for each of the two kinds of source: England with `fetch-ea`, and Canada's HRDEM, where the builder chooses UTM itself.
+- **`docs/architecture.md`**: how start-up works, what each module does, random streams, how a course is loaded, the frame loop, the test hooks, and where the builder fits in.
+- **`CONTRIBUTING.md`**: setup, the checks, code style, the screenshot test policy, and the licences of code and data.
+- **Templates:**
+  - Pull requests: a short template with a "new course" checklist (credits, licence, validator, ridden locally, size).
+  - Issues: forms for a bug and for a course proposal.
+- **CI (`.github/workflows/ci.yml`)**, on every pull request and on pushes to `main`:
+  - A JavaScript job: `npm ci`, ESLint, Prettier, and `npm test`, which includes validating every course.
+  - A Python job: Ruff, pytest, and `coursebuilder validate`.
+  - The acceptance test and the screenshot tests stay local.
+  - Playwright's browsers aren't downloaded, because nothing in CI uses them.
+- **Found while writing:** the building drawing code is switched off for every course (`SHOW_TOWN = false`, chosen for Leckhampton's 19th-century look). So `buildings` only keeps trees off buildings for now. The docs say so, and turning it on per scenery style goes under "Later".
+
 ### Later
 
 - Point-to-point routes (stop or turn round at the end).
 - Building a course from a local OpenStreetMap extract, without Overpass.
-- Dropping the hand-written grid-reference maths from the app; nothing in the app needs it after phase 3.
+- Drawing buildings: the code exists but is switched off for every course (`SHOW_TOWN` in `src/scenery/buildings.js`), because Leckhampton is dressed as the 19th century. A modern scenery style could turn it on.
+- Screenshot tests in CI, with a tolerance tuned for SwiftShader.
 
 ## Risks
 

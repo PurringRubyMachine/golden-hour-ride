@@ -10,7 +10,8 @@ import { meshH } from '../course/terrain.js';
 const V3 = THREE.Vector3;
 const rnd = makeRandom('buildings');
 
-if (real && real.buildings.length) {
+// (hedges and walls are drawn even where there are no buildings, such as open country)
+if (real && (real.buildings.length || real.lines.length)) {
   const m4 = new THREE.Matrix4(),
     q = new THREE.Quaternion(),
     up = new V3(0, 1, 0),
