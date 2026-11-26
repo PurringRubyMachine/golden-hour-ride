@@ -214,6 +214,18 @@ Status: done.
 
 - **Acceptance test:** passes, with road heights 0.11 m apart on average (0.58 m at most) and climbing 228 m both before and after.
 - **Scenery check:** a full build with OpenStreetMap, outside the test, matched the old buildings and hedges almost exactly (8,238 against 8,240 buildings; 906 against 907 hedge and wall pieces). It found more single trees and woodland near the edges of the terrain square, which the old cache didn't cover. In the ride, the rebuilt course looks almost identical to the current one.
+- **The committed course is now the builder's** (after phase 5). It replaced the converted one, so Leckhampton can be rebuilt from its sources: newer OpenStreetMap data adds single trees near the edges of the square (1,987 against 1,310), and the road comes out 17 m shorter (11.84 km), so the menu says 11.8 km. The acceptance test now checks that the builder still reproduces it. The command, after `fetch-ea --route tools/.cache/leckhampton.gpx --out tools/.cache/ea-leckhampton` (the GPX was exported from the converted course's road, as the acceptance test does):
+
+  ```bash
+  .venv/bin/python -m tools.coursebuilder build --id leckhampton --name "Leckhampton Hill loop" --short-name Leckhampton \
+      --description "A loop over the Cotswold scarp above Cheltenham, past the old quarries on Leckhampton Hill." \
+      --route tools/.cache/leckhampton.gpx --dtm tools/.cache/ea-leckhampton \
+      --heights-credit "Heights: Environment Agency LiDAR, Open Government Licence." --heights-licence OGL-UK-3.0 \
+      --heights-url https://environment.data.gov.uk/survey \
+      --credit "Route © OpenStreetMap contributors.|ODbL-1.0|https://www.openstreetmap.org/copyright" \
+      --scenery-style pastoral-1800s --sheep-above 175 --stooks-below 150 --smoke 51.864200,-2.078700 --start 850
+  ```
+
 - **Changes during the build:**
   - `build.py` holds the build steps, and `__main__.py` only reads the command line.
   - `fetch-ea` fetches two tiles at a time and retries timeouts, because the service sometimes takes more than a minute to answer.

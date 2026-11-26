@@ -10,6 +10,7 @@ from conftest import UTM, square_route, write_gpx
 from pyproj import CRS, Transformer
 
 from tools.coursebuilder import BuildError
+from tools.coursebuilder.__main__ import _metres
 from tools.coursebuilder.course import dumps
 from tools.coursebuilder.frame import Frame, choose_crs, crs_name
 from tools.coursebuilder.gpx import read_gpx
@@ -149,3 +150,9 @@ def test_json_layout_matches_the_repository(name):
     """course.json and index.json come out laid out as Prettier leaves them, so the format check passes."""
     text = (ROOT / "courses" / name).read_text(encoding="utf-8")
     assert dumps(json.loads(text)) + "\n" == text
+
+
+def test_whole_metres_stay_whole():
+    assert _metres("850") == 850 and isinstance(_metres("850"), int)
+    assert _metres("850.0") == 850 and isinstance(_metres("850.0"), int)
+    assert _metres("12.5") == 12.5
