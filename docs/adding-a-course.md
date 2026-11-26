@@ -77,6 +77,7 @@ Other options (`build --help` lists them all):
 | Option                            | Does                                                                                         |
 | --------------------------------- | -------------------------------------------------------------------------------------------- |
 | `--start METRES`                  | Where riders begin, along the loop from its first point. Pick somewhere with a view.         |
+| `--keep-route`                    | Copy the GPX into the course as `route.gpx`, so others can rebuild it. See below.            |
 | `--scenery-style pastoral-1800s`  | Sheep on the high ground and hay stooks in the vale, as at Leckhampton.                      |
 | `--sheep-above`, `--stooks-below` | The heights for those, in metres (by default the road's 65th and 35th percentiles).          |
 | `--smoke LAT,LON`                 | Smoke from the steepest ground near a point, such as a quarry. Repeatable.                   |
@@ -84,6 +85,10 @@ Other options (`build --help` lists them all):
 | `--description TEXT`              | A sentence for the course file.                                                              |
 
 Rebuilding with the same `--id` replaces the course. Downloads are cached in `tools/.cache/`, so a rebuild is quick.
+
+Every build also writes `build.json` into the course folder: the exact command, the GPX's checksum, the DTM files by name, and how current the OpenStreetMap data was. Commit it with the course: it's how anyone can tell where the course came from. Paths in it are relative to the project folder, or just file names if the files are elsewhere, so nothing from your home folder is published.
+
+**Keeping the route.** With `--keep-route` the GPX is copied into the course as `route.gpx`, and `build.json`'s command uses that copy, so anyone can rebuild the course. Use it for a route anyone could ride and you're happy to publish, such as a loop drawn on a route planner. Leave it off for a recording of your own ride: the road line in the course shows the loop either way, but a GPX can carry more, and you may not want it published. [courses/leckhampton/](../courses/leckhampton/) is an example, with a README on its sources.
 
 ### Example: England
 
@@ -133,4 +138,4 @@ Open `http://localhost:8791/?course=my-loop`, or pick it from the Course menu. R
 npm test                                    # includes validating every course
 ```
 
-Then open a pull request with `courses/my-loop/` and the change to `courses/index.json` (not the GPX or the DTM). The pull request template has a checklist for new courses: credits, licences, size, and that you've ridden it. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the rest.
+Then open a pull request with `courses/my-loop/` (including `build.json`) and the change to `courses/index.json`. Don't add the DTM, or a GPX outside the course folder. The pull request template has a checklist for new courses: credits, licences, size, and that you've ridden it. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the rest.

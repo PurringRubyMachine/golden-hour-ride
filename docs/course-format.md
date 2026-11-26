@@ -17,7 +17,12 @@ courses/
     terrain.bin         survey courses: ground heights
     road.json           survey courses: the road line
     scenery.json        optional: buildings, trees, hedges and walls, woodland
+    build.json          written by the course builder: where the course came from (the app ignores it)
+    route.gpx           optional: the route, if the builder was asked to keep it (--keep-route)
+    README.md           optional: notes on the course and its sources
 ```
+
+The app reads only the first four. `build.json` records the build: the command (paths relative to the project, or bare file names), the GPX's SHA-256 and whether it was kept, the working coordinate system and the DTM files by name, and how current the OpenStreetMap data was (`openStreetMap.dataAsOf`, Overpass's timestamp). It isn't checked by the validators, so it isn't part of format 1.
 
 `<id>` is lower-case letters, digits and hyphens, such as `leckhampton` or `mont-ventoux-bedoin`. It is what `?course=<id>` takes.
 
