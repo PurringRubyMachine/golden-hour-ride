@@ -85,6 +85,42 @@
       "problem": "sheepAbove"
     },
     { "name": "smoke as one point", "base": "survey", "set": { "scenery.options.smoke": [1, 2] }, "problem": "smoke" },
+    {
+      "name": "with a photo of the ground",
+      "base": "survey",
+      "set": { "imagery": { "file": "ground.jpg", "size": 4096 } },
+      "problem": null
+    },
+    {
+      "name": "photo size written as 2048.0",
+      "base": "survey",
+      "set": { "imagery": { "file": "ground.jpg", "size": 2048.0 } },
+      "problem": null
+    },
+    {
+      "name": "imagery not an object",
+      "base": "survey",
+      "set": { "imagery": "ground.jpg" },
+      "problem": "imagery must"
+    },
+    {
+      "name": "imagery without a file",
+      "base": "survey",
+      "set": { "imagery": { "size": 4096 } },
+      "problem": "imagery.file"
+    },
+    {
+      "name": "imagery size not whole",
+      "base": "survey",
+      "set": { "imagery": { "file": "ground.jpg", "size": 10.5 } },
+      "problem": "imagery.size"
+    },
+    {
+      "name": "imagery size zero",
+      "base": "survey",
+      "set": { "imagery": { "file": "ground.jpg", "size": 0 } },
+      "problem": "imagery.size"
+    },
     { "name": "not an object", "base": "survey", "replace": [1, 2], "problem": "object" }
   ]
 }

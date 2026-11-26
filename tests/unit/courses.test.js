@@ -32,5 +32,6 @@ for (const id of folders) {
       assert.ok(existsSync(new URL(`${id}/${c.scenery.file}`, root)), `${c.scenery.file} exists`);
       assert.deepEqual(validateScenery(c, json(`${id}/${c.scenery.file}`)), []);
     }
+    if (c.imagery) assert.ok(existsSync(new URL(`${id}/${c.imagery.file}`, root)), `${c.imagery.file} exists`);
   });
 }

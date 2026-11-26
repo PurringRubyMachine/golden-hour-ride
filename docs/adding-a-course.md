@@ -85,6 +85,7 @@ Other options (`build --help` lists them all):
 | `--smoke LAT,LON`                 | Smoke from the steepest ground near a point, such as a quarry. Repeatable.                   |
 | `--margin METRES`                 | Terrain around the route (1300). Smaller for a long loop or a DTM that doesn't reach so far. |
 | `--description TEXT`              | A sentence for the course file.                                                              |
+| `--imagery FILE...`               | A photo of the ground from above, shown in the distance. See below.                          |
 
 Rebuilding with the same `--id` replaces the course. Downloads are cached in `tools/.cache/`, so a rebuild is quick.
 
@@ -120,6 +121,23 @@ The service is free and sometimes slow; `fetch-ea` waits and tries again, and on
 ```
 
 [courses/gatineau-park-loop/](../courses/gatineau-park-loop/) was built this way. The HRDEM mosaic is in Canada Atlas Lambert (EPSG:3979), which stretches distances by about half a percent in southern Canada; the builder sees that and works in the local UTM zone instead, so the road's length and gradients come out right. Heights are CGVD2013, which doesn't matter: the ride only uses differences in height.
+
+### The ground from above
+
+A photo of the ground, from a satellite or a plane, shows real fields, lakes, villages and forest in the distance, where the ground's own colours are a smooth green. `fetch-sentinel2` reads one for any route from Copernicus Sentinel-2 (10 m per pixel, free with credit): the clearest summer scenes of the last three years, filling any part one misses from the next, in a few seconds. Look at the file it writes before building with it: a scene can still have a patch of cloud or haze the catalogue missed.
+
+```bash
+.venv/bin/python -m tools.coursebuilder fetch-sentinel2 --route my-loop.gpx --out tools/.cache/s2-my-loop
+.venv/bin/python -m tools.coursebuilder build ... \
+    --imagery tools/.cache/s2-my-loop/sentinel2.tif \
+    --imagery-credit "Ground from above: contains modified Copernicus Sentinel data 2024." \
+    --imagery-licence "Copernicus Sentinel data licence" \
+    --imagery-url https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice
+```
+
+`fetch-sentinel2` prints the credit for the years it used. `--months` (6-8 by default: June to August, before the leaves turn) and `--years` choose other seasons and years; `--max-cloud` allows cloudier scenes where clear ones are rare. Pass the same `--margin` as to the build.
+
+Any colour GeoTIFF with a coordinate system will do instead, such as a government aerial photo, if its licence allows sharing a derived image. The builder turns it onto the course's square, evens out its brightness and writes `ground.jpg` (at most 4096 pixels across and about 2.5 MB).
 
 ## 5. Ride it
 

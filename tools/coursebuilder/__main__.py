@@ -1,4 +1,7 @@
-"""The course builder's command line: python -m tools.coursebuilder {build,validate,fetch-ea,fetch-hrdem} ..."""
+"""The course builder's command line: python -m tools.coursebuilder COMMAND ...
+
+Commands: build, validate, fetch-ea, fetch-hrdem, fetch-sentinel2.
+"""
 
 import argparse
 import json
@@ -21,6 +24,17 @@ def _metres(text):
     """A distance or height: whole numbers stay whole, so course.json says 850, not 850.0."""
     v = float(text)
     return int(v) if v.is_integer() else v
+
+
+def _span(text):
+    """A range such as 2023-2025 or 6-8, or a single value."""
+    try:
+        parts = [int(v) for v in text.split("-")]
+    except ValueError:
+        parts = []
+    if len(parts) not in (1, 2) or parts[0] > parts[-1]:
+        raise argparse.ArgumentTypeError(f"expected FROM-TO such as 6-8, or one number, not {text!r}")
+    return parts[0], parts[-1]
 
 
 def _credit(text):
@@ -83,6 +97,15 @@ def parser():
         help="copy the GPX into the course as route.gpx, so others can rebuild it (only for a route you're happy to "
         "publish: it shows where the loop goes)",
     )
+    b.add_argument(
+        "--imagery",
+        nargs="+",
+        metavar="FILE",
+        help="photos of the ground from above (GeoTIFFs, in any coordinate system), shown in the distance",
+    )
+    b.add_argument("--imagery-credit", help='credit for the photos, such as "Ground from above: ..."')
+    b.add_argument("--imagery-licence", help="the photos' licence, such as CC-BY-4.0")
+    b.add_argument("--imagery-url", help="where the photos come from")
     b.add_argument("--courses-dir", default="courses", help=argparse.SUPPRESS)
     b.add_argument("--cache-dir", default="tools/.cache", help=argparse.SUPPRESS)
 
@@ -98,6 +121,16 @@ def parser():
     c.add_argument("--route", required=True, help="the route as a GPX file")
     c.add_argument("--out", required=True, help="folder for the tiles; pass it to build --dtm")
     c.add_argument("--margin", type=float, default=1300, metavar="METRES", help="terrain around the route (1300)")
+
+    s = sub.add_parser("fetch-sentinel2", help="read a summer satellite photo of the ground for a route, anywhere")
+    s.add_argument("--route", required=True, help="the route as a GPX file")
+    s.add_argument("--out", required=True, help="folder for the photo; pass the file to build --imagery")
+    s.add_argument("--margin", type=float, default=1300, metavar="METRES", help="terrain around the route (1300)")
+    s.add_argument("--years", type=_span, metavar="FROM-TO", help="years to search (default: the last three)")
+    s.add_argument(
+        "--months", type=_span, default=(6, 8), metavar="FROM-TO", help="months to search (6-8: June to August)"
+    )
+    s.add_argument("--max-cloud", type=float, default=5, metavar="PERCENT", help="cloudiest scene allowed (5)")
     return p
 
 
@@ -133,6 +166,24 @@ def cmd_fetch_hrdem(a):
     return 0
 
 
+def cmd_fetch_sentinel2(a):
+    import datetime
+
+    from . import sentinel2
+    from .gpx import read_gpx
+
+    if a.years:
+        years = range(a.years[0], a.years[1] + 1)
+    else:  # the last three summers that have finished, or are under way
+        now = datetime.date.today()
+        last = now.year if now.month > a.months[0] else now.year - 1
+        years = range(last - 2, last + 1)
+    path, used = sentinel2.fetch(read_gpx(a.route), a.out, a.margin, list(years), a.months, a.max_cloud)
+    args = sentinel2.credit_args(used)
+    print("Look at it, then build with:  --imagery", path, " ".join(f'"{v}"' if " " in v else v for v in args))
+    return 0
+
+
 def cmd_fetch_ea(a):
     from . import ea
     from .gpx import read_gpx
@@ -150,6 +201,7 @@ def main(argv=None):
             "validate": cmd_validate,
             "fetch-ea": cmd_fetch_ea,
             "fetch-hrdem": cmd_fetch_hrdem,
+            "fetch-sentinel2": cmd_fetch_sentinel2,
         }
         return commands[a.command](a)
     except BuildError as ex:

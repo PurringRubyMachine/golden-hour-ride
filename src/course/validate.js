@@ -71,6 +71,14 @@ export function validateCourse(c, id) {
         );
       }
     }
+    const im = c.imagery;
+    if (im !== undefined) {
+      if (!isObj(im)) bad.push('imagery must be an object');
+      else {
+        need(isText(im.file), 'imagery.file is required');
+        need(Number.isInteger(im.size) && im.size > 0, 'imagery.size must be a whole number of pixels');
+      }
+    }
   } else bad.push('kind must be "survey" or "procedural"');
   return bad;
 }

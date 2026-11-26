@@ -113,6 +113,13 @@ def validate_course(c, id):
                         "smoke" not in op or (isinstance(smoke, list) and all(_point(p, 2) for p in smoke)),
                         "scenery.options.smoke must be a list of [x, z] points",
                     )
+        if "imagery" in c:
+            im = c["imagery"]
+            if not _obj(im):
+                bad.append("imagery must be an object")
+            else:
+                need(_text(im.get("file")), "imagery.file is required")
+                need(_int(im.get("size")) and im["size"] > 0, "imagery.size must be a whole number of pixels")
     else:
         bad.append('kind must be "survey" or "procedural"')
     return bad
@@ -187,6 +194,8 @@ def validate_folder(folder, index=None):
             bad += validate_road(c, load(c["road"]))
             if c.get("scenery", {}).get("file"):
                 bad += validate_scenery(c, load(c["scenery"]["file"]))
+            if "imagery" in c and not (folder / c["imagery"]["file"]).exists():
+                bad.append(f"{c['imagery']['file']} is missing")
         return bad
     except _Missing as ex:
         return [str(ex)]
