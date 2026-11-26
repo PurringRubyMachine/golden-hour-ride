@@ -16,10 +16,11 @@ from .course import write, write_json
 from .dtm import Dtm
 from .frame import choose_crs, crs_name, square_around
 from .gpx import read_gpx
-from .road import climb, smooth, steepest, surface_heights
+from .road import across_bridges, climb, smooth, steepest, surface_heights
 from .route import STEP, make_loop
 
 ROAD_EVERY = 3  # keep every third 5 m point: the ride's road line has a point every 15 m
+SPARSE = 150  # GPX points further apart than this on average are probably turns, not a track
 
 
 @dataclass
@@ -127,7 +128,14 @@ def build(o, log=print):
         dtm_files = sorted(Path(s.name).name for s in dtm.sources)
 
         to_xy = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
-        line, gap = make_loop([to_xy.transform(lo, la) for la, lo in latlon], close=o.close)
+        raw = [to_xy.transform(lo, la) for la, lo in latlon]
+        spacing = sum(math.dist(a, b) for a, b in zip(raw, raw[1:])) / max(1, len(raw) - 1)
+        if spacing > SPARSE:
+            log(
+                f"warning: the GPX's points are {spacing:.0f} m apart on average, so the road is drawn straight "
+                "between them: is it a list of turns (a route) rather than a track? Export the track if you can."
+            )
+        line, gap = make_loop(raw, close=o.close)
         if gap > STEP:
             log(f"the route's ends were {gap:.0f} m apart; joined")
         frame = square_around(line, crs, o.margin)
@@ -148,6 +156,10 @@ def build(o, log=print):
     finally:
         dtm.close()
 
+    if o.osm:
+        heights, crossed = across_bridges(line, heights, osm.bridges(frame, o.cache_dir))
+        if crossed:
+            log(f"road: drawn straight across {crossed} bridge{'s' if crossed > 1 else ''} (from OpenStreetMap)")
     heights = smooth(heights)
     up, down = steepest(heights, STEP)
     log(

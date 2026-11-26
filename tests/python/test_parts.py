@@ -15,7 +15,7 @@ from tools.coursebuilder.course import dumps
 from tools.coursebuilder.frame import Frame, choose_crs, crs_name
 from tools.coursebuilder.gpx import read_gpx
 from tools.coursebuilder.osm import convert
-from tools.coursebuilder.road import climb, smooth, steepest
+from tools.coursebuilder.road import across_bridges, climb, smooth, steepest
 from tools.coursebuilder.route import STEP, make_loop, remove_spurs
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -156,3 +156,38 @@ def test_whole_metres_stay_whole():
     assert _metres("850") == 850 and isinstance(_metres("850"), int)
     assert _metres("850.0") == 850 and isinstance(_metres("850.0"), int)
     assert _metres("12.5") == 12.5
+
+
+def rectangle_loop(w=1000, h=200, step=5):
+    """A loop round a rectangle, anticlockwise from the south-west corner, a point every `step` metres."""
+    pts = [(x, 0.0) for x in range(0, w, step)] + [(float(w), y) for y in range(0, h, step)]
+    pts += [(x, float(h)) for x in range(w, 0, -step)] + [(0.0, y) for y in range(h, 0, -step)]
+    return [(float(x), float(y)) for x, y in pts]
+
+
+def test_road_is_drawn_straight_across_a_bridge():
+    line = rectangle_loop()
+    # a valley under the road at x 490-530 on the south side: the bare-ground DTM dips 4 m there
+    heights = [100.0 - (4.0 if y == 0 and 490 <= x <= 530 else 0.0) for x, y in line]
+    out, crossed = across_bridges(line, heights, [[(485.0, 2.0), (535.0, 2.0)]])
+    assert crossed == 1
+    assert max(abs(h - 100.0) for h in out) < 1e-9
+
+
+def test_road_under_a_bridge_or_beside_one_is_left_alone():
+    line = rectangle_loop()
+    heights = [100.0 + 0.01 * x for x, _ in line]
+    across = [[(300.0, -20.0), (300.0, 20.0)]]  # another road crossing over ours
+    beside = [[(600.0, 15.0), (700.0, 15.0)]]  # a bridge on a road 15 m away
+    out, crossed = across_bridges(line, heights, across + beside)
+    assert crossed == 0 and out == heights
+
+
+def test_bridge_across_the_start_of_the_loop():
+    line = rectangle_loop()
+    k = line.index((500.0, 0.0))
+    line = line[k:] + line[:k]  # the loop starts and ends at x 500, in the middle of the bridge
+    heights = [100.0 - (3.0 if y == 0 and 490 <= x <= 510 else 0.0) for x, y in line]
+    out, crossed = across_bridges(line, heights, [[(480.0, 0.0), (520.0, 0.0)]])
+    assert crossed == 1
+    assert max(abs(h - 100.0) for h in out) < 1e-9
