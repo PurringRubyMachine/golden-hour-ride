@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping. New courses are especially welcome: see [docs/adding-a-course.md](docs/adding-a-course.md). For how the code fits together, see [docs/architecture.md](docs/architecture.md).
+Thank you for helping. New courses are especially welcome: see [docs/adding-a-course.md](docs/adding-a-course.md), or let Claude Code build one for you ([README](README.md#add-your-own-course-with-claude-code); its project notes are in [CLAUDE.md](CLAUDE.md)). For how the code fits together, see [docs/architecture.md](docs/architecture.md).
 
 ## Setup
 

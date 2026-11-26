@@ -52,6 +52,67 @@ This fork started from the original's commit of 22 November 2026 ("Add MIT licen
 - Quality: Auto, Low, Medium or High (the Quality button, kept in the browser; `?quality=` for one visit). Auto starts at Medium on built-in graphics and High otherwise, and steps down if the ride isn't smooth; it remembers where it settled. Low runs at 60 fps on a laptop's built-in Intel graphics.
 - Descents count half in the speed model and the rider brakes above 54 km/h, so downhill speed stays sensible.
 
+## Add your own course, with Claude Code
+
+You don't need to know how to code to add a course. [Claude Code](https://code.claude.com/docs/en/quickstart), an AI assistant that works in a terminal, can build one for you from two things: a route and the terrain under it. This repository's [CLAUDE.md](CLAUDE.md) tells it how courses are made here.
+
+### 1. Get the code
+
+- **To share your course afterwards**, sign in to GitHub, press **Fork** at the top of this page, then copy your fork to your computer:
+
+  ```bash
+  git clone https://github.com/<your-name>/golden-hour-ride.git
+  cd golden-hour-ride
+  ```
+
+- **Just to try it**, press **Code → Download ZIP** and unzip it.
+
+You'll also need Python 3.10 or later and Node.js. If they're missing, Claude Code can install them for you.
+
+### 2. Install Claude Code
+
+It needs a paid Claude plan (Pro, Max, Team or Enterprise) or Anthropic API credit: the free plan doesn't include it. Install it from a terminal:
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash      # macOS, Linux
+```
+
+```powershell
+irm https://claude.ai/install.ps1 | iex             # Windows (PowerShell)
+```
+
+Then start it in the project folder, and log in in your browser the first time:
+
+```bash
+cd golden-hour-ride
+claude
+```
+
+The [quickstart](https://code.claude.com/docs/en/quickstart) has other ways to install, and the system requirements.
+
+### 3. Ask for a course
+
+Tell it the course's name, where the route is, and where the terrain comes from. Links are fine, and so are files you've downloaded:
+
+> Create a new course called "My Loop". The route is at `<a link to the GPX, or the downloaded file>`. Get the terrain model (DTM) from `<a link to the source, or the folder of downloaded tiles>`.
+
+The Gatineau Park Loop was made from exactly this kind of prompt:
+
+> Now, let's create a new course called Gatineau Park Loop. You can find the GPX file here: https://ridewithgps.com/routes/34405323 and then get only the required DTM tiles from here: https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b
+
+From there, Claude Code fetches the route and the terrain, runs the course builder, checks the climbing and gradients are believable, chooses a start with a view, and shows you the course. It asks when it needs you. Your part:
+
+- **Download files that need a login.** For example, Ride with GPS only gives the GPX to signed-in users: export **GPX Track**, not GPX Route.
+- **Terrain outside England and Canada.** Claude Code fetches it itself in England (Environment Agency) and Canada (HRDEM). Elsewhere, download the tiles for the area from your country's source (see [the list](docs/adding-a-course.md#2-the-dtm)) and give it the folder.
+- **Check what you're allowed to share.** The route and terrain must have licences that let them be published, and both get credited on screen.
+- **Ride it.** Is the road on the ground? Do the hills feel right? Is the start a good view?
+
+### 4. Share it
+
+Ask Claude Code to "open a pull request for this course". It commits the course on a branch and offers it to this repository, where it's reviewed against the checklist in the pull request template. This needs your fork, and GitHub's command line tool (`gh`) signed in: Claude Code can help you set that up.
+
+[docs/adding-a-course.md](docs/adding-a-course.md) has the details, and what to do without Claude Code.
+
 ## Run it locally
 
 The ride needs a local web server; opening `index.html` straight from disk does not work, because browsers block pages from reading local files.
@@ -76,7 +137,7 @@ npm run test:visual  # screenshot tests, about a minute: see tests/visual/README
 
 Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.yml`).
 
-## Building a course
+## Building a course by hand
 
 The course builder turns a GPX route and LiDAR DTM files (any format GDAL reads, in any coordinate system) into a course folder. It needs Python 3.10 or later.
 
