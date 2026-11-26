@@ -267,6 +267,25 @@ Status: done.
 - GitHub Actions on each pull request: ESLint and Prettier, `node --test`, ruff and pytest, and validating every course in `courses/` (data checks only, so the cost stays negligible however many courses there are).
 - Visual tests run locally at first. GPU rendering in CI (SwiftShader) differs from desktop GPUs; they can join CI later with a tolerance tuned for SwiftShader.
 
+#### How phase 5 is done
+
+- **`docs/course-format.md`** becomes the specification. It covers every field, the local frame, what each scenery entry means, and what the validators check. The format section in this plan then points to it.
+- **`docs/adding-a-course.md`**:
+  - The steps: get a GPX, get a DTM, install the builder, build, ride it locally, tune it, and open a pull request.
+  - A table of free DTM sources with their licences. The links were checked when writing.
+  - A worked example for each of the two kinds of source: England with `fetch-ea`, and Canada's HRDEM, where the builder chooses UTM itself.
+- **`docs/architecture.md`**: how start-up works, what each module does, random streams, how a course is loaded, the frame loop, the test hooks, and where the builder fits in.
+- **`CONTRIBUTING.md`**: setup, the checks, code style, the screenshot test policy, and the licences of code and data.
+- **Templates:**
+  - Pull requests: a short template with a "new course" checklist (credits, licence, validator, ridden locally, size).
+  - Issues: forms for a bug and for a course proposal.
+- **CI (`.github/workflows/ci.yml`)**, on every pull request and on pushes to `main`:
+  - A JavaScript job: `npm ci`, ESLint, Prettier, and `npm test`, which includes validating every course.
+  - A Python job: Ruff, pytest, and `coursebuilder validate`.
+  - The acceptance test and the screenshot tests stay local.
+  - Playwright's browsers aren't downloaded, because nothing in CI uses them.
+- **Found while writing:** the building drawing code is switched off for every course (`SHOW_TOWN = false`, chosen for Leckhampton's 19th-century look). So `buildings` only keeps trees off buildings for now. The docs say so, and turning it on per scenery style goes under "Later".
+
 ### Later
 
 - Point-to-point routes (stop or turn round at the end).
