@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { $ } from './util/dom.js';
 import { smooth } from './util/noise.js';
-import { FREEZE, SCENERY, XMAS } from './options.js';
+import { FREEZE, SCENERY } from './options.js';
 import { uMeadow, uTime } from './uniforms.js';
 import { camera, scene } from './render/renderer.js';
 import { sun, sunDir } from './render/sky.js';
@@ -15,6 +15,7 @@ import { nextSpeed } from './physics.js';
 import { st } from './state.js';
 import { setClean } from './ui/controls.js';
 import { audio } from './audio.js';
+import { XMAS } from './course/course.js';
 
 const V3 = THREE.Vector3;
 

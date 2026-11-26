@@ -1,42 +1,84 @@
-// The course: the invented valley, or a real road built from survey data.
+// The course: loads courses/<id>/ (see docs/refactor-plan.md, "Course format, version 1").
+// ?course=<id> picks one from courses/index.json; anything not listed falls back to the valley.
 import { $ } from '../util/dom.js';
-import { COURSE } from '../options.js';
+import { OPTIONS } from '../options.js';
+import { validateCourse, validateRoad, validateScenery, validateTerrain } from './validate.js';
 
-export let real = null;
-if (COURSE !== 'valley') {
-  $('loading').textContent = 'Building Leckhampton Hill…';
-  const addScript = (src) =>
-    new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = res;
-      s.onerror = () => rej(new Error('missing ' + src));
-      document.head.append(s);
-    });
-  const DATA = 3; // bump when the course files change, so browsers don't reuse an old copy
-  await addScript(`assets/${COURSE}.js?v=${DATA}`);
-  await addScript(`assets/${COURSE}_osm.js?v=${DATA}`).catch(() => {}); // buildings, woods and hedges are optional
-  real = window.RIDE_COURSES[COURSE];
-  real.osm = real.osm || { buildings: [], trees: [], lines: [], woods: '', credit: '' };
-  const wb = Uint8Array.from(atob(real.osm.woods), (c) => c.charCodeAt(0));
-  real.wood = (x, z) => {
-    // is this spot mapped as woodland?
-    const g = real.cells,
-      ix = Math.round((x + real.size / 2) / (real.size / g)),
-      iz = Math.round((z + real.size / 2) / (real.size / g));
-    if (ix < 0 || iz < 0 || ix > g || iz > g) return false;
-    const i = iz * (g + 1) + ix;
-    return ((wb[i >> 3] >> (i & 7)) & 1) === 1;
-  };
-  const raw = Uint8Array.from(atob(real.dem), (c) => c.charCodeAt(0)),
-    q = new Uint16Array(raw.buffer);
-  real.h = Float32Array.from(q, (v) => real.demMin + (v / 65535) * (real.demMax - real.demMin)); // surveyed ground heights, metres
-  $('credit').textContent = real.credit + ' ' + real.osm.credit;
+// A broken course says why in place of the loading message, rather than leaving a blank page.
+function fail(problems) {
+  $('loading').textContent = 'This course could not be loaded: ' + problems.join('; ');
+  throw new Error('ride: ' + problems.join('; '));
 }
-$('course').textContent = real ? 'Course: Leckhampton' : 'Course: Valley';
-$('course').addEventListener('click', () => {
-  location.search = real ? '' : '?course=leckhampton';
-});
+async function get(url, as) {
+  let r;
+  try {
+    r = await fetch(url);
+  } catch {
+    fail([
+      location.protocol === 'file:' ? 'run a local web server to ride (see the README)' : `could not fetch ${url}`,
+    ]);
+  }
+  if (!r.ok) fail([`${url}: ${r.status} ${r.statusText}`]);
+  try {
+    return await r[as]();
+  } catch {
+    fail([`${url} is not valid ${as === 'json' ? 'JSON' : 'data'}`]);
+  }
+}
+const check = (problems) => problems.length && fail(problems);
+
+// Every course, for the menu and the ride log: [{ id, name, shortName, lengthKm, climbM }]
+export const courses = await get('courses/index.json', 'json');
+const id = courses.some((c) => c.id === OPTIONS.course) ? OPTIONS.course : 'valley';
+const dir = `courses/${id}/`;
+
+export const course = await get(dir + 'course.json', 'json');
+check(validateCourse(course, id));
+
+// ?theme=christmas: the valley under snow at dusk, with lights in the trees and a few chalets
+export const XMAS = OPTIONS.xmas && course.generator === 'valley';
+
+// The surveyed ground, road and mapped scenery of a survey course; null for the invented valley.
+export let real = null;
+if (course.kind === 'survey') {
+  $('loading').textContent = `Building ${course.name}…`;
+  const t = course.terrain,
+    file = course.scenery?.file;
+  const [buf, road, scenery] = await Promise.all([
+    get(dir + t.file, 'arrayBuffer'),
+    get(dir + course.road, 'json'),
+    file ? get(dir + file, 'json') : {},
+  ]);
+  check(validateTerrain(course, buf.byteLength));
+  check(validateRoad(course, road));
+  if (file) check(validateScenery(course, scenery));
+
+  const g = t.cells,
+    dv = new DataView(buf);
+  // surveyed ground heights, metres: little-endian uint16 scaled between min and max
+  const h = new Float32Array((g + 1) ** 2);
+  for (let i = 0; i < h.length; i++) h[i] = t.min + (dv.getUint16(i * 2, true) / 65535) * (t.max - t.min);
+  const wb = Uint8Array.from(atob(scenery.woods ?? ''), (c) => c.charCodeAt(0));
+  real = {
+    size: t.size,
+    cells: g,
+    h,
+    road,
+    buildings: scenery.buildings ?? [],
+    trees: scenery.trees ?? [],
+    lines: scenery.lines ?? [],
+    // is this spot mapped as woodland?
+    wood(x, z) {
+      const ix = Math.round((x + t.size / 2) / (t.size / g)),
+        iz = Math.round((z + t.size / 2) / (t.size / g));
+      if (ix < 0 || iz < 0 || ix > g || iz > g) return false;
+      const i = iz * (g + 1) + ix;
+      return ((wb[i >> 3] >> (i & 7)) & 1) === 1;
+    },
+  };
+}
+$('credit').textContent = course.credits.map((c) => c.text).join(' ');
+
 export function demH(x, z) {
   // the real ground under a point
   const g = real.cells,

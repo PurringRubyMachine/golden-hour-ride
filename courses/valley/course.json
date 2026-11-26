@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "id": "valley",
+  "name": "The valley",
+  "shortName": "Valley",
+  "description": "An invented alpine valley: a loop past pines and meadows under the mountains. Add ?theme=christmas for snow at dusk.",
+  "kind": "procedural",
+  "generator": "valley",
+  "loop": true,
+  "start": 0,
+  "credits": []
+}

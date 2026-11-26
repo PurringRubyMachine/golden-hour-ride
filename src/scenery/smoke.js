@@ -1,26 +1,31 @@
-// Real courses: smoke from the quarry workings on the scarp.
+// Survey courses: smoke from workings such as a quarry, at the points the course lists (scenery.options.smoke).
 import * as THREE from 'three';
 import { makeRandom } from '../util/random.js';
 import { uPx, uTime } from '../uniforms.js';
 import { scene } from '../render/renderer.js';
-import { demH, real, st0 } from '../course/course.js';
+import { course, demH, real, st0 } from '../course/course.js';
 import { meshH } from '../course/terrain.js';
 import { uCloudHaze } from './clouds.js';
 
 const rnd = makeRandom('smoke');
 
-if (real && real.quarry) {
-  const [qx, qz] = real.quarry,
-    cands = [],
-    src = [];
-  for (let n = 0; n < 400; n++) {
-    const x = qx + (rnd() - 0.5) * 520,
-      z = qz + (rnd() - 0.5) * 520;
-    cands.push([Math.hypot(demH(x + 10, z) - demH(x - 10, z), demH(x, z + 10) - demH(x, z - 10)), x, z]);
-  }
-  cands.sort((a, b) => b[0] - a[0]); // the steepest ground nearby is the quarry face
-  for (const [, x, z] of cands) {
-    if (src.length < 3 && src.every((s) => Math.hypot(s[0] - x, s[1] - z) > 70)) src.push([x, z]);
+const points = (real && course.scenery?.options?.smoke) || [];
+if (points.length) {
+  // up to three plumes per point, on the steepest ground within about 260 m (a quarry face)
+  const src = [];
+  for (const [qx, qz] of points) {
+    const cands = [],
+      near = [];
+    for (let n = 0; n < 400; n++) {
+      const x = qx + (rnd() - 0.5) * 520,
+        z = qz + (rnd() - 0.5) * 520;
+      cands.push([Math.hypot(demH(x + 10, z) - demH(x - 10, z), demH(x, z + 10) - demH(x, z - 10)), x, z]);
+    }
+    cands.sort((a, b) => b[0] - a[0]);
+    for (const [, x, z] of cands) {
+      if (near.length < 3 && near.every((s) => Math.hypot(s[0] - x, s[1] - z) > 70)) near.push([x, z]);
+    }
+    src.push(...near);
   }
   const PUFFS = 46,
     n = src.length * PUFFS,

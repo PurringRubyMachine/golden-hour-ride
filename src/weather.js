@@ -1,13 +1,14 @@
 // Weather: sky lid, rain, snow, and the change from one weather to another.
 import * as THREE from 'three';
 import { makeRandom } from './util/random.js';
-import { OPTIONS, SCENERY, XMAS } from './options.js';
+import { OPTIONS, SCENERY } from './options.js';
 import { uCloud, uMote, uPx, uRain, uSunAmt, uTime } from './uniforms.js';
 import { camera, renderer, scene } from './render/renderer.js';
 import { envScene, hazeCol, hemi, pmrem, setEnvironment, sky, sun } from './render/sky.js';
 import { terrainMat } from './course/terrain.js';
 import { road } from './scenery/roadway.js';
 import { hazeLum, uCloudDark, uCloudHaze, uCloudLit, uLid } from './scenery/clouds.js';
+import { XMAS } from './course/course.js';
 
 const V3 = THREE.Vector3;
 const rnd = makeRandom('weather');

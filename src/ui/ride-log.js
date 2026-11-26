@@ -1,7 +1,8 @@
 // The ride log: distance ridden, kept in this browser.
-import { $ } from '../util/dom.js';
-import { COURSE } from '../options.js';
+import { $, esc } from '../util/dom.js';
+import { course, courses } from '../course/course.js';
 import { st } from '../state.js';
+import { panel } from './panels.js';
 
 {
   const KEY = 'golden-hour-ride-log',
@@ -14,7 +15,7 @@ import { st } from '../state.js';
       return [];
     }
   };
-  const ride = { t: new Date().toISOString(), c: COURSE, m: 0, s: 0 };
+  const ride = { t: new Date().toISOString(), c: course.id, m: 0, s: 0 };
   let last = performance.now(),
     ok = true;
   const save = () => {
@@ -32,6 +33,9 @@ import { st } from '../state.js';
       ok = false;
     }
   };
+  // a course that is no longer listed shows its id; text only, since the log comes from storage
+  const names = new Map(courses.map((c) => [c.id, c.shortName ?? c.name])),
+    nameOf = (id) => esc(names.get(id) ?? String(id));
   const km = (m) => (m / 1000).toFixed(m < 99950 ? 1 : 0),
     box = $('log'),
     btn = $('logbtn');
@@ -48,7 +52,7 @@ import { st } from '../state.js';
       .reverse()
       .map(
         (r) =>
-          `<tr><td>${day(r.t)}</td><td class="muted">${r.c === 'leckhampton' ? 'Leckhampton' : 'Alps'}</td><td class="muted">${mins(r.s)}</td><td>${km(r.m)} km</td></tr>`,
+          `<tr><td>${day(r.t)}</td><td class="muted">${nameOf(r.c)}</td><td class="muted">${mins(r.s)}</td><td>${km(r.m)} km</td></tr>`,
       )
       .join('');
     box.innerHTML =
@@ -72,11 +76,7 @@ import { st } from '../state.js';
         }
       };
   };
-  btn.onclick = () => {
-    box.hidden = !box.hidden;
-    btn.classList.toggle('on', !box.hidden);
-    if (!box.hidden) draw();
-  };
+  panel(btn, box, draw);
   setInterval(() => {
     save();
     if (!box.hidden) draw();

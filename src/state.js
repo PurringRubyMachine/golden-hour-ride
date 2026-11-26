@@ -1,11 +1,11 @@
 // The ride state, shared with the controls and the tests (window.ride).
 import { AT } from './options.js';
 import { hazeCol } from './render/sky.js';
-import { real, st0 } from './course/course.js';
+import { course, st0 } from './course/course.js';
 import { LEN, N, P } from './course/road.js';
 import { setWeather } from './weather.js';
 
-const START = real ? 850 : 0; // Leckhampton: begin on the lane about 150 m below where the hill steepens, not out in the vale
+const START = course.start ?? 0; // where the course says to begin
 
 // frame: frames drawn so far; pending: verge grass near the rider still to be built (one patch is built per frame)
 export const st = {

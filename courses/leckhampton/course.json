@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "id": "leckhampton",
+  "name": "Leckhampton Hill loop",
+  "shortName": "Leckhampton",
+  "description": "A loop over the Cotswold scarp above Cheltenham, past the old quarries on Leckhampton Hill.",
+  "kind": "survey",
+  "loop": true,
+  "start": 850,
+  "origin": {
+    "crs": "EPSG:27700",
+    "x": 395640,
+    "y": 218870
+  },
+  "terrain": {
+    "file": "terrain.bin",
+    "size": 6200,
+    "cells": 620,
+    "min": 44.68468475341797,
+    "max": 297.97962188720703
+  },
+  "road": "road.json",
+  "scenery": {
+    "file": "scenery.json",
+    "style": "pastoral-1800s",
+    "options": {
+      "sheepAbove": 175,
+      "stooksBelow": 150,
+      "smoke": [[-962.5, 464.9]]
+    }
+  },
+  "credits": [
+    {
+      "text": "Route © OpenStreetMap contributors.",
+      "licence": "ODbL-1.0",
+      "url": "https://www.openstreetmap.org/copyright"
+    },
+    {
+      "text": "Heights: Environment Agency LiDAR, Open Government Licence.",
+      "licence": "OGL-UK-3.0",
+      "url": "https://environment.data.gov.uk/survey"
+    },
+    {
+      "text": "Buildings, woods and hedges © OpenStreetMap contributors.",
+      "licence": "ODbL-1.0",
+      "url": "https://www.openstreetmap.org/copyright"
+    }
+  ]
+}
