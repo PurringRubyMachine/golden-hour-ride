@@ -139,6 +139,14 @@ A photo of the ground, from a satellite or a plane, shows real fields, lakes, vi
 
 Any colour GeoTIFF with a coordinate system will do instead, such as a government aerial photo, if its licence allows sharing a derived image. The builder turns it onto the course's square, evens out its brightness and writes `ground.jpg` (at most 4096 pixels across and about 2.5 MB).
 
+| Where         | Source                                                                                                                                                              | Detail    | Licence                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------------------------------- |
+| Anywhere      | Copernicus Sentinel-2: use `fetch-sentinel2`                                                                                                                        | 10 m      | Copernicus Sentinel data licence |
+| Québec        | [Imagerie orthorectifiée du Québec](https://www.donneesquebec.ca/recherche/fr/dataset/3eec3d05-61c1-4bcb-bf22-2d4bd71e2c0d) (download map; coverage varies by year) | 20–50 cm  | `CC-BY-4.0`                      |
+| United States | USDA NAIP, from [The National Map downloader](https://apps.nationalmap.gov/downloader/)                                                                             | 60 cm–1 m | Public domain                    |
+
+Pick a scene from the time of year that suits the place: by July many fields in England are harvested and look brown from a hill, so Leckhampton uses May (`--months 5-5`).
+
 ## 5. Ride it
 
 ```bash
