@@ -10,6 +10,8 @@ const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isText = (v) => typeof v === 'string' && v.trim() !== '';
 const isObj = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isPoint = (p, n) => Array.isArray(p) && p.length === n && p.every(isNum);
+// strict base64: groups of four characters, padded with = only at the end, so atob() in the loader can't fail
+const isBase64 = (s) => /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(s);
 
 // course.json. id is the folder name, which the course's own id must match.
 export function validateCourse(c, id) {
@@ -102,7 +104,7 @@ export function validateScenery(c, sc) {
   if (sc.woods !== undefined) {
     const bytes = Math.ceil((c.terrain.cells + 1) ** 2 / 8),
       chars = 4 * Math.ceil(bytes / 3);
-    if (typeof sc.woods !== 'string' || (sc.woods !== '' && sc.woods.length !== chars))
+    if (typeof sc.woods !== 'string' || (sc.woods !== '' && (sc.woods.length !== chars || !isBase64(sc.woods))))
       bad.push(`${c.scenery.file}: woods must be ${chars} characters of base64 (one bit per terrain point)`);
   }
   return bad;

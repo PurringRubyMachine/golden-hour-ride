@@ -84,4 +84,8 @@ test('scenery entries and the woodland mask are checked', () => {
   );
   assert.match(validateScenery(survey(), { trees: [[1, 2, 3]] }).join(), /trees/);
   assert.match(validateScenery(survey(), { woods: 'AAAA' }).join(), /woods/);
+  // the right length but not base64, which would make the loader's atob() throw
+  const chars = 4 * Math.ceil(Math.ceil(101 ** 2 / 8) / 3);
+  assert.match(validateScenery(survey(), { woods: '!'.repeat(chars) }).join(), /woods/);
+  assert.match(validateScenery(survey(), { woods: 'A=' + 'A'.repeat(chars - 2) }).join(), /woods/);
 });
