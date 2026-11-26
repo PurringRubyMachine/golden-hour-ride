@@ -1,0 +1,27 @@
+name: Something's wrong
+description: The ride, a course or the course builder doesn't work as it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: The address (with any ?course= or other options), or the builder command you ran.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and system
+      description: For example, Chrome 131 on Windows 11. For the builder, the Python version and system.
+  - type: textarea
+    id: details
+    attributes:
+      label: Messages
+      description: Anything on screen, in the browser's console, or printed by the builder.
+      render: text

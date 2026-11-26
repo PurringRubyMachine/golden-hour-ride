@@ -1,0 +1,31 @@
+name: Course idea
+description: Propose a course, or ask for help building one.
+labels: [course]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: The loop's name and roughly where it is.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this loop
+      description: What makes it a good ride?
+  - type: input
+    id: dtm
+    attributes:
+      label: DTM source and licence
+      description: Where the terrain data comes from, and its licence. See docs/adding-a-course.md for free sources.
+  - type: dropdown
+    id: building
+    attributes:
+      label: Who will build it
+      options:
+        - I'll build it and open a pull request
+        - I'd like help building it
+        - Just an idea
+    validations:
+      required: true
