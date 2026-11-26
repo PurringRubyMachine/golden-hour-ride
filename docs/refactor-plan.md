@@ -104,6 +104,7 @@ A course is a folder under `courses/<id>/`. The app fetches files; there are no 
 - `road.json`: `[[x, y, z], ...]` in local metres (x east, y up, z south), one point about every 15 m.
 - `scenery.json`: buildings, single trees, hedge and wall pieces, and the woodland mask. Same contents as today's `_osm.js`. Optional.
 - `credits` is required and must have at least one entry. The app shows it on screen, and the validator rejects a course without it.
+- Added in phase 3: optional `shortName`, `scenery.options.smoke` as a list of points, and `credits` may be empty for a procedural course. See "How phase 3 is done".
 - `kind: "procedural"` with `"generator": "valley"` describes the invented course, so the menu treats both kinds the same way.
 - `courses/index.json` lists `id`, `name`, `lengthKm` and `climbM` for each course. The course builder keeps it up to date.
 - `docs/course-format.md` is the specification, and `src/course/validate.js` and the Python validator both check against it.
@@ -179,6 +180,8 @@ Each step is its own commit, and every step except the last must keep the three 
 5. **Separate random streams.** Each part of the scene gets its own seeded stream, and each patch of verge grass is seeded by its position on the road, so grass no longer depends on the order patches are built in. This changes the picture once: retake the baselines and review them by eye.
 
 ### Phase 3: course format and loader
+
+Status: done. Deviations from the target layout: the loader stays in `course/course.js` rather than a new `loader.js`, the valley's road stays in `course/road.js` rather than `valley.js`, and `ui/panels.js` and `ui/course-menu.js` were added. Writing `docs/course-format.md` waits for phase 5; until then the format is described in this plan and enforced by `src/course/validate.js`.
 
 - A one-off conversion script turns today's `leckhampton.js` and `_osm.js` into `courses/leckhampton/` in format 1. No rebuild from source data is needed for this step.
 - Move the values that only make sense for Leckhampton into `course.json`. The course button becomes a menu built from `courses/index.json`. `?course=<id>` accepts any listed course.

@@ -43,16 +43,17 @@ Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.y
 
 - `index.html` – the page: controls, display and the import map for Three.js.
 - `src/` – the ride, as ES modules. `main.js` loads the textures and course, then `scene.js` builds the scene, one module per part:
-  - `course/` – the road line and the ground
+  - `course/` – loading and checking a course, the road line and the ground
   - `scenery/` – road surface, grass, trees, buildings, clouds and the rest
   - `render/` – renderer, textures, sky and post-processing
   - `devices/` – smart trainers (FTMS)
-  - `ui/` – controls, ride log and voice
+  - `ui/` – controls, course menu, ride log and voice
   - `physics.js` – the speed model; `weather.js`; `ride.js` – the frame loop
 - `styles/` – the page's CSS.
-- `assets/` – textures and course data.
+- `courses/` – one folder per course; `index.json` lists them for the menu. The format is described in `docs/refactor-plan.md` (course format, version 1).
+- `assets/` – textures.
 - `tests/` – unit tests (`unit/`) and screenshot tests (`visual/`).
-- `tools/` – scripts that build the Leckhampton course data.
+- `tools/` – scripts that build the Leckhampton course data (in the old format, which `convert_legacy_course.py` turns into a course folder; a general course builder replaces all three in phase 4 of the plan).
 - `docs/` – plans and design notes.
 
 ## Credits
@@ -67,4 +68,4 @@ Pushing to `main` publishes the ride to GitHub Pages (`.github/workflows/pages.y
 
 The code is released under the MIT licence: see `LICENSE`. Use it, change it, build your own ride.
 
-The MIT licence covers the code only. The course data in `assets/leckhampton.js` and `assets/leckhampton_osm.js` is derived from the sources credited above and stays under their terms: the Open Government Licence v3.0 for the terrain and the ODbL for the OpenStreetMap data. If you share or adapt that data, keep those credits.
+The MIT licence covers the code only. The course data in `courses/leckhampton/` is derived from the sources credited above and stays under their terms: the Open Government Licence v3.0 for the terrain and the ODbL for the OpenStreetMap data. If you share or adapt that data, keep those credits.
