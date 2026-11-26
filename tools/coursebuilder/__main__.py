@@ -17,6 +17,12 @@ def _latlon(text):
     return lat, lon
 
 
+def _metres(text):
+    """A distance or height: whole numbers stay whole, so course.json says 850, not 850.0."""
+    v = float(text)
+    return int(v) if v.is_integer() else v
+
+
 def _credit(text):
     parts = text.split("|")
     if len(parts) not in (2, 3) or not all(p.strip() for p in parts):
@@ -50,8 +56,10 @@ def parser():
         help="another source to credit, such as where the route came from (repeatable)",
     )
     b.add_argument("--scenery-style", choices=["plain", "pastoral-1800s"], default="plain")
-    b.add_argument("--sheep-above", type=float, metavar="METRES", help="pastoral: sheep graze above this height")
-    b.add_argument("--stooks-below", type=float, metavar="METRES", help="pastoral: hay stooks stand below this height")
+    b.add_argument("--sheep-above", type=_metres, metavar="METRES", help="pastoral: sheep graze above this height")
+    b.add_argument(
+        "--stooks-below", type=_metres, metavar="METRES", help="pastoral: hay stooks stand below this height"
+    )
     b.add_argument(
         "--smoke",
         type=_latlon,
@@ -68,7 +76,7 @@ def parser():
     )
     b.add_argument("--margin", type=float, default=1300, metavar="METRES", help="terrain around the route (1300)")
     b.add_argument("--close", action="store_true", help="join the route's ends if they're more than 50 m apart")
-    b.add_argument("--start", type=float, default=0, metavar="METRES", help="where riders begin, along the loop")
+    b.add_argument("--start", type=_metres, default=0, metavar="METRES", help="where riders begin, along the loop")
     b.add_argument("--courses-dir", default="courses", help=argparse.SUPPRESS)
     b.add_argument("--cache-dir", default="tools/.cache", help=argparse.SUPPRESS)
 

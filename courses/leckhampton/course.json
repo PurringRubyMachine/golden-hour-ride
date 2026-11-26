@@ -17,7 +17,7 @@
     "size": 6200,
     "cells": 620,
     "min": 44.68468475341797,
-    "max": 297.97962188720703
+    "max": 297.9796142578125
   },
   "road": "road.json",
   "scenery": {
@@ -31,14 +31,14 @@
   },
   "credits": [
     {
-      "text": "Route © OpenStreetMap contributors.",
-      "licence": "ODbL-1.0",
-      "url": "https://www.openstreetmap.org/copyright"
-    },
-    {
       "text": "Heights: Environment Agency LiDAR, Open Government Licence.",
       "licence": "OGL-UK-3.0",
       "url": "https://environment.data.gov.uk/survey"
+    },
+    {
+      "text": "Route © OpenStreetMap contributors.",
+      "licence": "ODbL-1.0",
+      "url": "https://www.openstreetmap.org/copyright"
     },
     {
       "text": "Buildings, woods and hedges © OpenStreetMap contributors.",
