@@ -185,6 +185,24 @@ Each step is its own commit, and every step except the last must keep the three 
 - Credits on screen come from `course.json`. The ride log shows the course name from the data (this also fixes the "Alps" label).
 - Screenshots must match the phase 2 baseline.
 
+#### How phase 3 is done
+
+- **Conversion.** `tools/convert_legacy_course.py` (standard library only) reads `assets/<id>.js` and `assets/<id>_osm.js` and writes `courses/<id>/`. `terrain.bin` is the existing uint16 heights, unchanged. Numbers are copied exactly, so the ride is identical. The old JavaScript course files are then deleted. The converter goes in phase 4 along with the two old build scripts, which still write the old format until then.
+- **Format additions found while converting** (these become part of format 1):
+  - `shortName` (optional): for the course button and the ride log ("Leckhampton"). If it's missing, `name` is used.
+  - `scenery.json` holds `buildings`, `trees`, `lines` and `woods`. `woods` is a bitmask with one bit per terrain grid point, base64-encoded.
+  - `scenery.options.smoke` is a list of `[x, z]` points. Smoke rises from the steepest ground within about 260 m of each point, which is how Leckhampton's quarry works today.
+  - `credits` is required for `survey` courses. A `procedural` course may leave it empty, because there is no outside data to credit.
+- **Loader** (`src/course/course.js`): reads `courses/index.json`, picks the course named by `?course=<id>` (anything not listed falls back to the valley), fetches `course.json`, checks it with `src/course/validate.js`, and then fetches the terrain, road and scenery. A broken course shows the reason in place of the loading message rather than a blank page.
+- **What moves out of code:** the start position (`START = 850`), the sheep and stook heights, the quarry smoke, the credits, the ride log names, and the course button label. Scenery style `pastoral-1800s` turns on the sheep and stooks. The broadleaf trees and buildings go with any `survey` course.
+- **Christmas** is a theme of the valley generator. `XMAS` moves from `options.js` to `course.js`, because only the loaded course can say whether the theme applies.
+- **Course menu:** the Course button keeps its label and opens a panel styled like the ride log, listing every course with its length and climbing. Choosing one reloads the page with `?course=<id>`.
+- **Ride log:** shows each ride's course by its `shortName` from `courses/index.json`. Rides on a course that's no longer listed show its id. Valley rides were labelled "Alps" by mistake; they now show "Valley".
+- **Checks:**
+  - The unit tests validate every folder in `courses/`: the fields, the terrain file size, and that the course is listed in `index.json`. This is data only, so the cost stays negligible however many courses are added.
+  - `validate.js` itself has unit tests.
+  - The three screenshots must match exactly.
+
 ### Phase 4: course builder
 
 - Build `tools/coursebuilder/` as described above.
