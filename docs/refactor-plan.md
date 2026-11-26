@@ -68,6 +68,8 @@ docs/                      course-format.md, adding-a-course.md, architecture.md
 
 ## Course format, version 1
 
+The specification is now [course-format.md](course-format.md). This section is the original design, kept for the record.
+
 A course is a folder under `courses/<id>/`. The app fetches files; there are no more globals.
 
 `course.json`:
@@ -262,6 +264,11 @@ Status: done.
 
 ### Phase 5: documentation and CI
 
+Status: done.
+
+- **New files:** `docs/course-format.md`, `docs/adding-a-course.md`, `docs/architecture.md`, `CONTRIBUTING.md`, a pull request template, two issue forms, and `.github/workflows/ci.yml`.
+- **A bug fixed along the way:** hedges and walls were only drawn on courses that also had buildings.
+
 - `docs/adding-a-course.md`: a step-by-step walkthrough with sources of free DTM data (Environment Agency, Scottish Remote Sensing Portal, USGS 3DEP, IGN RGE ALTI, swisstopo swissALTI3D and others), checking the result locally, and opening a pull request.
 - `docs/course-format.md`, `docs/architecture.md`, `CONTRIBUTING.md`, and pull request and issue templates (including a "new course" checklist covering licence and credits).
 - GitHub Actions on each pull request: ESLint and Prettier, `node --test`, ruff and pytest, and validating every course in `courses/` (data checks only, so the cost stays negligible however many courses there are).
@@ -290,7 +297,8 @@ Status: done.
 
 - Point-to-point routes (stop or turn round at the end).
 - Building a course from a local OpenStreetMap extract, without Overpass.
-- Dropping the hand-written grid-reference maths from the app; nothing in the app needs it after phase 3.
+- Drawing buildings: the code exists but is switched off for every course (`SHOW_TOWN` in `src/scenery/buildings.js`), because Leckhampton is dressed as the 19th century. A modern scenery style could turn it on.
+- Screenshot tests in CI, with a tolerance tuned for SwiftShader.
 
 ## Risks
 
