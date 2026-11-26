@@ -4,6 +4,8 @@ Turn a road you know into a course: a route as GPX, the ground under it as a LiD
 
 The format the builder writes is described in [course-format.md](course-format.md).
 
+New to this? [Claude Code](https://code.claude.com/docs/en/quickstart) can do these steps for you from a route link and a terrain source: see [Add your own course, with Claude Code](../README.md#add-your-own-course-with-claude-code) in the README. This guide is what it follows (with the project's [CLAUDE.md](../CLAUDE.md)), and what to do by hand.
+
 ## 1. The route
 
 You need a GPX file of the loop: a track, or a route.
