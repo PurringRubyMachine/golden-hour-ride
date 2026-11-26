@@ -213,6 +213,45 @@ Status: done. Deviations from the target layout: the loader stays in `course/cou
 - **Acceptance test:** export the Leckhampton road as GPX (from British National Grid to WGS84 with pyproj), fetch Environment Agency tiles with `fetch-ea`, rebuild, and compare. Road heights within 0.5 m on average and total climbing within 3 %. OpenStreetMap features will differ slightly because the data is newer; that's expected.
 - Remove the two old Leckhampton scripts.
 
+#### How phase 4 is done
+
+- **Setup:** `tools/requirements.txt` (numpy, pyproj, rasterio) and `tools/requirements-dev.txt` (adds pytest and ruff). Development uses a `.venv` in the project folder, which git ignores.
+- **Modules** in `tools/coursebuilder/`:
+
+  | Module        | What it does                                                                                              |
+  | ------------- | --------------------------------------------------------------------------------------------------------- |
+  | `gpx.py`      | Reads the GPX file.                                                                                       |
+  | `route.py`    | Removes spurs, resamples every 5 m, and checks or closes the loop.                                        |
+  | `frame.py`    | Chooses the working coordinate system and the local frame.                                                |
+  | `dtm.py`      | Opens the DTM files, samples the fine heights near the road, builds the terrain grid and fills its holes. |
+  | `road.py`     | Road heights, smoothing and statistics.                                                                   |
+  | `osm.py`      | Fetches OpenStreetMap features from Overpass (cached), converts them, and builds the woodland mask.       |
+  | `course.py`   | Writes the course folder and updates `courses/index.json`.                                                |
+  | `validate.py` | Checks a course against the format.                                                                       |
+  | `ea.py`       | `fetch-ea`.                                                                                               |
+  | `__main__.py` | The command line.                                                                                         |
+
+- **Working coordinate system:** the first DTM's own system, if it is projected in metres and its scale error at the route is under 0.1 %. Otherwise the route's UTM zone. (Canada's national Lambert projection, for example, stretches distances by up to about 0.5 % in the south, which would make roads slightly too long.)
+- **DTM sources:**
+  - **Mixed files:** different resolutions and coordinate systems can be mixed. Each file is reprojected on the fly with `rasterio.warp.reproject`, finest last, so where files overlap the finest wins.
+  - **Fine heights:** road heights come from 2 m tiles along the road, as now. The terrain is a 10 m grid, averaged over each cell.
+- **Gaps in the DTM:**
+  - **Small holes:** holes in the terrain up to 200 m across are filled with GDAL's `fillnodata`.
+  - **Stop with a clear message:** if more than 1 % of the terrain grid, or any part of the road, has no data. The message gives the missing area in latitude and longitude, and suggests a smaller `--margin` if the gap is at the edges.
+- **Road heights:** today's method (the flattest point across the road, a 5-point median, then two passes of a 7-point moving average). The smoothing now wraps round the loop's ends.
+- **Pastoral scenery:** with `--scenery-style pastoral-1800s`, sheep appear above the 65th percentile of the road's heights and stooks below the 35th, rounded to 5 m. `--sheep-above`, `--stooks-below` and `--smoke LAT,LON` (repeatable) override them.
+- **Credits:**
+  - **Heights credit:** `--heights-credit TEXT --heights-licence ID [--heights-url URL]` are required. `fetch-ea` prints the values to use for Environment Agency data.
+  - **OpenStreetMap credit:** added automatically unless `--no-osm`.
+  - **Extra sources:** `--credit "TEXT|LICENCE|URL"` (repeatable) adds one, such as wherever the GPX came from.
+- **OpenStreetMap features:**
+  - **Request:** one Overpass request for the terrain square: buildings, single trees, woods and forests, and hedges and walls.
+  - **Cache:** responses are kept in `tools/.cache/overpass-<hash>.json`, so a rebuild doesn't fetch again.
+  - **User-Agent:** a generic one naming the tool.
+- **Two validators kept in step:** `tests/course-cases.json` lists courses that should pass or fail. Both the JavaScript and the Python unit tests run every case.
+- **Acceptance test** (`tests/python/test_leckhampton.py`): runs only when `COURSEBUILDER_NETWORK=1` is set. It needs about 50 MB of Environment Agency tiles, kept in `tools/.cache/`. Heights are compared at the nearest rebuilt road point to each original one. The committed Leckhampton course is not replaced: its scenery would change with newer OpenStreetMap data, and the screenshot baseline with it. Rebuilding it is a separate choice.
+- **Removed:** `build_leckhampton.py`, `build_leckhampton_osm.py` and `convert_legacy_course.py`.
+
 ### Phase 5: documentation and CI
 
 - `docs/adding-a-course.md`: a step-by-step walkthrough with sources of free DTM data (Environment Agency, Scottish Remote Sensing Portal, USGS 3DEP, IGN RGE ALTI, swisstopo swissALTI3D and others), checking the result locally, and opening a pull request.
