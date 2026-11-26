@@ -46,6 +46,8 @@ The app treats both kinds of course the same way through `course.json`: a `proce
 
 `real` is the survey course's data: `size`, `cells` and `h` (heights), `road`, `buildings`, `trees`, `lines`, and `wood(x, z)`. Modules check `real` to choose between surveyed and generated ground, and `course.scenery.style` for how to dress it.
 
+Trees go where `wood(x, z)` says there is woodland, at most 26,000 of them. Where there is little woodland they cover it evenly; where there is a lot (more than about 9 km², as in Gatineau Park), they are planted near the road instead, thinning with distance. Beyond about 150 m, wooded ground is drawn in a canopy colour, so distant forest reads as forest.
+
 ## Random numbers
 
 Placement is random but the same on every visit: each module draws from its own seeded stream (`makeRandom('trees')` in `util/random.js`). Streams are independent, so changing how many random numbers one module uses doesn't move another module's trees. A new module should take its own stream with a new name.

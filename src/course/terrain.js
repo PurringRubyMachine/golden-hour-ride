@@ -147,6 +147,28 @@ tGeo.computeVertexNormals();
     }
   tGeo.setAttribute('aShade', new THREE.BufferAttribute(shade, 1));
 }
+// Woodland, per grid point, softened over its neighbours: from a distance wooded ground is drawn as a canopy, so a
+// forested hillside reads as forest even where the trees are too few to cover it.
+{
+  const raw = new Float32Array(TW * TW),
+    wood = new Float32Array(TW * TW);
+  if (real) for (let k = 0; k < TW * TW; k++) raw[k] = real.wood(tPos[k * 3], tPos[k * 3 + 2]) ? 1 : 0;
+  for (let iz = 0; iz < TW; iz++)
+    for (let ix = 0; ix < TW; ix++) {
+      let sum = 0,
+        n = 0;
+      for (let dz = -1; dz <= 1; dz++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const jx = ix + dx,
+            jz = iz + dz;
+          if (jx < 0 || jz < 0 || jx > TG || jz > TG) continue;
+          sum += raw[jz * TW + jx];
+          n++;
+        }
+      wood[iz * TW + ix] = sum / n;
+    }
+  tGeo.setAttribute('aWood', new THREE.BufferAttribute(wood, 1));
+}
 const rockMap = imgTex(imgRock, true);
 export const terrainMat = new THREE.MeshStandardMaterial({
   vertexColors: true,
@@ -159,10 +181,13 @@ terrainMat.onBeforeCompile = (s) => {
   s.uniforms.uRock = { value: rockMap };
   s.uniforms.uSunAmt = uSunAmt;
   s.vertexShader =
-    'attribute vec2 aMix; attribute float aShade; varying vec2 vMix; varying float vShade;\n' +
-    s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMix = aMix; vShade = aShade;');
+    'attribute vec2 aMix; attribute float aShade, aWood; varying vec2 vMix; varying float vShade, vWood;\n' +
+    s.vertexShader.replace(
+      '#include <begin_vertex>',
+      '#include <begin_vertex>\n vMix = aMix; vShade = aShade; vWood = aWood;',
+    );
   s.fragmentShader =
-    'uniform sampler2D uRock; uniform float uSunAmt; varying vec2 vMix; varying float vShade;\n' +
+    'uniform sampler2D uRock; uniform float uSunAmt; varying vec2 vMix; varying float vShade, vWood;\n' +
     s.fragmentShader.replace(
       '#include <map_fragment>',
       `
@@ -173,7 +198,9 @@ terrainMat.onBeforeCompile = (s) => {
     vec3 rc = mix(r1, r2, 0.4) * (0.35 + l2 * 1.2 + l3 * 1.6);                          // light and dark bands across whole rock faces
     float rockAmt = smoothstep(0.3, 0.7, vMix.x + (l2 - 0.3) * 0.9);                     // ragged edges where grass gives way to rock
     float snowAmt = smoothstep(0.35, 0.65, vMix.y + (l3 - 0.3) * 0.8);
-    diffuseColor.rgb *= mix(mix(gc, rc, rockAmt), ${XMAS ? 'vec3(0.66, 0.70, 0.78)' : 'vec3(0.92)'}, snowAmt) * mix(1., vShade, uSunAmt);`,
+    diffuseColor.rgb *= mix(mix(gc, rc, rockAmt), ${XMAS ? 'vec3(0.66, 0.70, 0.78)' : 'vec3(0.92)'}, snowAmt) * mix(1., vShade, uSunAmt);
+    float canopy = vWood * smoothstep(150., 450., length(vViewPosition));                 // woodland, seen from afar
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.055, 0.085, 0.035) * (0.7 + l3 * 0.9 + l2 * 0.5), canopy * 0.9);`,
     );
 };
 // The ground is drawn in 8 x 8 tiles sharing one set of vertices, so the camera, and the sun's shadow (which covers
