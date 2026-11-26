@@ -1,0 +1,92 @@
+# Architecture
+
+Golden Hour Ride is a static web page: HTML, CSS and JavaScript modules that the browser loads as they are. There is no build step and no server code. Three.js comes from jsDelivr through the import map in `index.html`. Everything else in the repository supports the page: course data, the Python course builder, tests and docs.
+
+```
+index.html, styles/     the page: controls, display, import map
+src/                    the ride, as ES modules
+courses/                one folder per course, plus index.json
+assets/                 textures (Poly Haven, CC0)
+tools/coursebuilder/    Python: GPX + DTM -> course folder
+tests/                  unit/ (node --test), python/ (pytest), visual/ (Playwright)
+docs/                   this, the course format, adding a course, the refactor plan
+```
+
+## Start-up
+
+`src/main.js` runs in two stages:
+
+1. **Load.** It imports `render/textures.js` and `course/course.js`, which wait on files: the texture images, and the course (`courses/index.json`, the chosen `course.json`, then its terrain, road and scenery). A module that waits at the top level lets its siblings run meanwhile, so both download together.
+2. **Build.** Only once both have finished does it `await import('./scene.js')`. `scene.js` imports every other module in order, and each one builds its part of the scene as it is imported: the renderer and sky, the road line and ground, then the scenery, weather, cockpit, post-processing, physics, controls, devices and finally `ride.js`, which starts the frame loop. So every scene module can rely on the textures and the course being ready.
+
+If a course is broken, `course.js` puts the reason in place of the loading message and stops.
+
+## Modules
+
+| Module               | What it does                                                                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `options.js`         | Reads the address bar once: `?course`, `?theme`, `?scenery`, `?hills`, and the test options.                                                       |
+| `course/course.js`   | Loads and validates the course; exports `course` (its course.json), `courses` (the index), `real` (survey data, or `null` for the valley), `XMAS`. |
+| `course/validate.js` | The format checks (no DOM, so the unit tests use it too).                                                                                          |
+| `course/road.js`     | The road as a smooth closed curve: `at(s)` gives position and direction `s` metres along; `nearRoad(x, z)` how far a point is from it.             |
+| `course/terrain.js`  | The ground mesh: surveyed heights, or the valley's noise mountains; blended into the road's own heights beside it.                                 |
+| `scenery/*`          | Road surface, verge grass (built in patches near the rider), meadow, trees, hedges and walls, sheep and stooks, chalets and lights, clouds, smoke. |
+| `render/*`           | Renderer and camera, textures, sky and sun, post-processing (bloom, light shafts, lens).                                                           |
+| `weather.js`         | The weathers and the change from one to another.                                                                                                   |
+| `physics.js`         | Speed from power and gradient. Pure: no DOM, no Three.js, unit-tested.                                                                             |
+| `devices/ftms.js`    | Smart trainer messages (Bluetooth FTMS). Pure, unit-tested.                                                                                        |
+| `devices/trainer.js` | The Bluetooth connection: power in, gradient out, reconnects.                                                                                      |
+| `ui/*`               | Keys and buttons, the course menu, the ride log, voice commands, and the drop-down panels.                                                         |
+| `state.js`           | The ride's state (`st`), shared by the controls, the loop and the tests as `window.ride`.                                                          |
+| `ride.js`            | The frame loop: speed, camera, nearby grass, drawing.                                                                                              |
+
+## Courses
+
+The app treats both kinds of course the same way through `course.json`: a `procedural` course (the valley) is generated in code, and a `survey` course is read from files. What differs between courses lives in data, not code: the start point, credits, names, scenery style and its options. See [course-format.md](course-format.md).
+
+`real` is the survey course's data: `size`, `cells` and `h` (heights), `road`, `buildings`, `trees`, `lines`, and `wood(x, z)`. Modules check `real` to choose between surveyed and generated ground, and `course.scenery.style` for how to dress it.
+
+## Random numbers
+
+Placement is random but the same on every visit: each module draws from its own seeded stream (`makeRandom('trees')` in `util/random.js`). Streams are independent, so changing how many random numbers one module uses doesn't move another module's trees. A new module should take its own stream with a new name.
+
+## The frame loop
+
+Each frame, `ride.js`:
+
+- turns the power (slider, keys or trainer) and the road's gradient into speed (`physics.js`), and moves the rider along the road;
+- updates the smoothed gradient (`st.grade`), which `devices/trainer.js` sends to a smart trainer four times a second, scaled by the Hills setting;
+- builds the next verge grass patch near the rider (one per frame, so the ride stays smooth) and drops patches left behind;
+- moves the camera, sun and weather, and draws through the post-processing chain.
+
+## Test hooks
+
+`window.ride` exposes the ride state for tests and for looking around by hand: `ride.go(metres)` jumps along the road, `ride.weather(name, true)` changes the weather at once, `ride.held` says a frozen view is complete. `?freeze` stops the clock and holds the picture still; `?at=` and `?weather=` set the start. See [tests/visual/README.md](../tests/visual/README.md).
+
+## Course builder
+
+`tools/coursebuilder/` is a Python package, run as `python -m tools.coursebuilder`. It shares nothing with the app but the course format, and its validator mirrors `validate.js` (the shared cases in `tests/course-cases.json` keep them agreeing).
+
+| Module        | What it does                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------- |
+| `gpx.py`      | Reads a GPX track or route.                                                                                     |
+| `route.py`    | Removes spurs, resamples every 5 m, closes the loop.                                                            |
+| `frame.py`    | Chooses the working coordinate system and the terrain square.                                                   |
+| `dtm.py`      | Reads DTM files of any format and coordinate system; fine heights by the road; the terrain grid; filling holes. |
+| `road.py`     | Road surface heights, smoothing and statistics.                                                                 |
+| `osm.py`      | OpenStreetMap features from Overpass, cached, and the woodland mask.                                            |
+| `course.py`   | Writes the course folder and the index.                                                                         |
+| `validate.py` | The format checks.                                                                                              |
+| `ea.py`       | `fetch-ea`: Environment Agency LiDAR tiles for England.                                                         |
+| `build.py`    | The build, step by step; `__main__.py` is the command line.                                                     |
+
+## Tests
+
+| Suite                 | Runs                                                                                             | Where          |
+| --------------------- | ------------------------------------------------------------------------------------------------ | -------------- |
+| `tests/unit/`         | `npm test`: physics, FTMS, options, random streams, the validator, every course's data           | CI and locally |
+| `tests/python/`       | `pytest`: the builder against synthetic DTMs whose answers are known; the shared validator cases | CI and locally |
+| `tests/visual/`       | `npm run test:visual`: three screenshots compared pixel for pixel                                | locally        |
+| `test_leckhampton.py` | Rebuilds Leckhampton from Environment Agency LiDAR and compares; needs `COURSEBUILDER_NETWORK=1` | locally        |
+
+The screenshot set stays at three (the valley, Christmas, Leckhampton): it checks the renderer, not the courses. New courses are covered by the data checks, which cost almost nothing however many there are.
