@@ -92,4 +92,4 @@ Every source goes into `docs/adding-a-course.md`'s table of sources, next to the
 
 **4. Leckhampton's photo** (this pull request): Sentinel-2, 27 May 2026 (2048 pixels, 3.0 m each, 0.9 MB). The clearest July scene (2025) was mostly harvested fields, brown from the hill; June (2025) was mixed; May is green with a few golden fields, which suits the evening. Its screenshot test changes (the distant vale, and the credit line), compared by eye; the valley and Christmas screenshots don't. Intel UHD 630 at Low: 58 fps.
 
-**5. Docs** (with step 4, in the same pull request): the README (the changes from the original, what's in the ride, adding a course with Claude Code, building by hand, credits and licence), a table of photo sources in `docs/adding-a-course.md`, and a photo step in `CLAUDE.md`'s course steps.
+**5. Docs** (pull request 24, after step 4): the README (the changes from the original, what's in the ride, adding a course with Claude Code, building by hand, credits and licence), a table of photo sources in `docs/adding-a-course.md`, and a photo step in `CLAUDE.md`'s course steps.
