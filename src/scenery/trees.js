@@ -14,13 +14,25 @@ import { onQuality } from '../render/quality.js';
 const V3 = THREE.Vector3;
 const rnd = makeRandom('trees');
 
-// trunk tiles, and how far away trunks are drawn (quality.js): see nearTrees
-const trunkTiles = [];
-let trunkFar = Infinity;
-onQuality((q) => (trunkFar = q.trunks));
-// every frame, from the ride loop: show the trunk tiles within trunkFar of the camera
+// tree tiles, and how far away crowns and trunks are drawn (quality.js): see nearTrees
+const crownTiles = [],
+  trunkTiles = [];
+let crownFar = Infinity,
+  trunkFar = Infinity,
+  treeShare = 1;
+onQuality((q) => {
+  crownFar = q.trees;
+  trunkFar = q.trunks;
+  // and draws fewer of each tile's trees at lower quality: the first ones, spread evenly since they were placed at random
+  treeShare = XMAS ? 1 : q.treeDensity; // at Christmas every tree near the road carries lights: keep them all
+  for (const t of [...crownTiles, ...trunkTiles]) t.count = Math.ceil(t.userData.all * treeShare);
+});
+const within = (m, cam, far) => m.boundingSphere.center.distanceTo(cam) - m.boundingSphere.radius < far;
+// every frame, from the ride loop: show the tiles within reach of the camera. Beyond it, distant woodland is still
+// there as the ground's canopy colour (terrain.js).
 export function nearTrees(cam) {
-  for (const t of trunkTiles) t.visible = t.boundingSphere.center.distanceTo(cam) - t.boundingSphere.radius < trunkFar;
+  for (const t of crownTiles) t.visible = within(t, cam, crownFar);
+  for (const t of trunkTiles) t.visible = within(t, cam, trunkFar);
 }
 
 {
@@ -283,9 +295,9 @@ export function nearTrees(cam) {
     }
     col.setRGB(0.7 + rnd() * 0.3, 0.75 + rnd() * 0.25, 0.6 + rnd() * 0.3).toArray(cols, i * 3);
   });
-  // Drawn in 250 m tiles, so the camera, and the sun's shadow (which covers only the ground round the rider), can each
+  // Drawn in tiles (250 m, or larger on a large course), so the camera, and the sun's shadow (which covers only the ground round the rider), can each
   // skip the tiles they can't see. The trees were placed above in the same order as ever; only now are they sorted.
-  const TILE = 250,
+  const TILE = Math.max(250, (TS * 0.78) / 24), // larger on a large course: at most about 24 × 24 tiles
     tiles = new Map();
   spots.forEach(([x, , z], i) => {
     const key = Math.floor(x / TILE) * 4096 + Math.floor(z / TILE);
@@ -303,10 +315,13 @@ export function nearTrees(cam) {
     });
     for (const m of [fol, trunk]) {
       m.computeBoundingSphere();
+      m.userData.all = list.length;
       m.castShadow = true;
       m.receiveShadow = true;
       scene.add(m);
     }
+    crownTiles.push(fol);
     trunkTiles.push(trunk);
+    fol.count = trunk.count = Math.ceil(list.length * treeShare);
   }
 }
