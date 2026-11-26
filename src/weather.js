@@ -24,40 +24,12 @@ const dome = new THREE.Mesh(
       uH: { value: new V3() },
       uZ: { value: new V3() },
       uA: { value: 0 },
-      uPaint: { value: 0 },
-      uGain: { value: hazeLum * 1.5 },
-      uTime,
     },
     vertexShader:
       'varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
-    fragmentShader: `uniform vec3 uH, uZ; uniform float uA, uPaint, uGain, uTime; varying vec3 vDir;
-    float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-    float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
-      return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
-    float fbm(vec2 p){ float s = 0., a = 0.5; for (int i = 0; i < 5; i++) { s += a * n(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }
-    vec3 starry(vec3 d){                                  // a night sky in thick, flowing strokes, after Van Gogh
-      vec2 p = d.xz / (1.15 + d.y) * 1.6;
-      float t = uTime * 0.03;
-      vec2 q = p - vec2(0.25, -0.35); float r = length(q), tw = 2.6 * exp(-r * r * 6.);       // the great swirl
-      p = mat2(cos(tw), -sin(tw), sin(tw), cos(tw)) * q + vec2(0.25, -0.35);
-      vec2 w = vec2(fbm(p * 1.6 + t), fbm(p * 1.6 + 5.2 - t));
-      float f = fbm(p * 2.2 + w * 2.4), band = 0.5 + 0.5 * sin(f * 46. + w.x * 6.);           // bands of paint along the flow
-      vec3 col = mix(vec3(0.03, 0.07, 0.28), vec3(0.10, 0.25, 0.72), band);
-      col = mix(col, vec3(0.45, 0.62, 0.9), smoothstep(0.62, 0.9, fbm(p * 3.1 - w * 2.)) * band);
-      for (int i = 0; i < 11; i++) {                      // stars as glowing discs with rings
-        vec2 s = vec2(h(vec2(float(i), 1.7)), h(vec2(float(i), 9.1))) * 2.6 - 1.3;
-        float dd = length(p - s), rad = 0.07 + 0.06 * h(vec2(float(i), 4.));
-        col = mix(col, vec3(1., 0.85, 0.25) * (0.6 + 0.4 * sin(dd * 160. - uTime * 1.5)), exp(-dd * dd / (rad * rad)) * 0.85);
-        col += vec3(1., 0.95, 0.6) * smoothstep(rad * 0.28, 0., dd);
-      }
-      vec2 m = p - vec2(-0.85, 0.6); float md = length(m);                                     // a crescent moon in its halo
-      col = mix(col, vec3(1., 0.8, 0.2) * (0.65 + 0.35 * sin(md * 120. - uTime)), exp(-md * md / 0.035) * 0.9);
-      col += vec3(1.2, 0.9, 0.3) * smoothstep(0.075, 0.06, md) * smoothstep(0.05, 0.065, length(m - vec2(0.03, 0.012)));
-      return col;
-    }
+    fragmentShader: `uniform vec3 uH, uZ; uniform float uA; varying vec3 vDir;
     void main(){
       vec3 col = mix(uH, uZ, smoothstep(0.2, 0.9, vDir.y));
-      if (uPaint > 0.01) col = mix(col, starry(normalize(vDir)) * uGain, uPaint);
       gl_FragColor = vec4(col, uA);
     }`,
   }),
@@ -168,7 +140,6 @@ const WEATHER = {
     rough: 1,
     tint: 1,
     ground: 1,
-    paint: 0,
     expo: 0.33,
   },
   overcast: {
@@ -189,7 +160,6 @@ const WEATHER = {
     rough: 0.9,
     tint: 0.9,
     ground: 0.95,
-    paint: 0,
     expo: 0.5,
   },
   rain: {
@@ -210,7 +180,6 @@ const WEATHER = {
     rough: 0.32,
     tint: 0.55,
     ground: 0.72,
-    paint: 0,
     expo: 0.5,
   },
   mist: {
@@ -231,29 +200,7 @@ const WEATHER = {
     rough: 0.7,
     tint: 0.85,
     ground: 0.95,
-    paint: 0,
     expo: 0.33,
-  },
-  starry: {
-    sun: 5,
-    sunCol: [1, 0.93, 0.74],
-    hemi: 3.2,
-    fog: 0.0005,
-    fogCol: grey(0.16, 0.26, 0.52),
-    dome: 1,
-    domeH: grey(0.16, 0.26, 0.52),
-    domeZ: grey(0.05, 0.1, 0.4),
-    cloud: 0,
-    cLit: warmLit,
-    cDark: warmDark,
-    mote: 5,
-    rays: 0,
-    rain: 0,
-    rough: 0.95,
-    tint: 1,
-    ground: 1,
-    paint: 1,
-    expo: 0.5,
   },
 };
 // Christmas dusk: the last low sun, a blue sky closing in, light snow falling.
@@ -275,7 +222,6 @@ WEATHER.snow = {
   rough: 0.5,
   tint: 0.62,
   ground: 1,
-  paint: 0,
   expo: 0.38,
   snow: 1,
 };
@@ -288,11 +234,10 @@ export function setWeather(name, instant) {
   if (instant) Object.assign(wx, JSON.parse(JSON.stringify(wxTarget)));
   // re-bake what the road and bike reflect, using the new sky
   const u = dome.material.uniforms,
-    was = [u.uA.value, u.uH.value.clone(), u.uZ.value.clone(), u.uPaint.value];
+    was = [u.uA.value, u.uH.value.clone(), u.uZ.value.clone()];
   u.uA.value = wxTarget.dome;
   u.uH.value.fromArray(wxTarget.domeH);
   u.uZ.value.fromArray(wxTarget.domeZ);
-  u.uPaint.value = wxTarget.paint;
   envScene.add(sky, dome);
   const rt = pmrem.fromScene(envScene, 0, 0.1, 20000);
   scene.add(sky, dome);
@@ -300,7 +245,6 @@ export function setWeather(name, instant) {
   u.uA.value = was[0];
   u.uH.value.copy(was[1]);
   u.uZ.value.copy(was[2]);
-  u.uPaint.value = was[3];
   document.querySelectorAll('#wx button').forEach((b) => b.classList.toggle('on', b.dataset.w === name));
 }
 export function stepWeather(dt) {
@@ -320,7 +264,6 @@ export function stepWeather(dt) {
   u.uA.value = wx.dome;
   u.uH.value.fromArray(wx.domeH);
   u.uZ.value.fromArray(wx.domeZ);
-  u.uPaint.value = wx.paint;
   dome.position.copy(camera.position);
   uCloud.value = wx.cloud;
   uMote.value = wx.mote;
@@ -339,14 +282,11 @@ export function stepWeather(dt) {
   renderer.toneMappingExposure = wx.expo;
 }
 document.querySelectorAll('#wx button').forEach((b) => b.addEventListener('click', () => setWeather(b.dataset.w)));
-// Starry is still being worked on: it only appears on the local copy, not the hosted site.
-export const LAB = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-if (!LAB) document.querySelector('#wx [data-w="starry"]')?.remove();
 if (!XMAS) document.querySelector('#wx [data-w="snow"]')?.remove();
 else setWeather('snow', true);
 // ?weather=<name> starts in that weather straight away (used by the screenshot tests).
 if (OPTIONS.weather !== null) setWeather(OPTIONS.weather, true);
 addEventListener('keydown', (e) => {
-  const n = ['golden', 'overcast', 'rain', 'mist', LAB && 'starry'][+e.key - 1];
+  const n = ['golden', 'overcast', 'rain', 'mist'][+e.key - 1];
   if (n) setWeather(n);
 });

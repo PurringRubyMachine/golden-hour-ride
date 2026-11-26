@@ -1,6 +1,6 @@
 // Voice commands.
 import { $ } from '../util/dom.js';
-import { LAB, setWeather } from '../weather.js';
+import { setWeather } from '../weather.js';
 import { setClean, skip } from './controls.js';
 import { HILLS, setHills } from '../devices/trainer.js';
 import { XMAS } from '../course/course.js';
@@ -27,7 +27,6 @@ import { XMAS } from '../course/course.js';
     [/\b(mist|misty|fog|foggy)\b/, 'Mist', () => setWeather('mist')],
     [/\b(overcast|cloud|clouds|cloudy|grey|gray)\b/, 'Overcast', () => setWeather('overcast')],
     [/\b(golden|sun|sunny|sunshine|sunset|clear|evening)\b/, 'Golden', () => setWeather('golden')],
-    ...(LAB ? [[/\b(starry|stars|night|painting|van gogh)\b/, 'Starry', () => setWeather('starry')]] : []),
     [/\b(skip|forward|ahead)\b/, 'Skip ahead', () => skip(250)],
     [/\bback\b/, 'Skip back', () => skip(-250)],
     [/\b(hide|hidden)\b/, 'Info hidden', () => setClean(true)],

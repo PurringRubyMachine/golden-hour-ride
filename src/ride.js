@@ -145,7 +145,6 @@ function tick() {
   lens.uniforms.uSpeed.value = Math.min(1, st.v / 22);
   lens.uniforms.uTime.value = uTime.value;
   lens.uniforms.uRain.value = wx.rain;
-  lens.uniforms.uPaint.value = wx.paint;
   if (audio) {
     const t = audio.ac.currentTime;
     audio.wind.g.gain.setTargetAtTime(Math.min(0.5, ((st.v * st.v) / 400) * 0.35), t, 0.2);
