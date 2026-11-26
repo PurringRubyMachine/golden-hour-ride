@@ -17,6 +17,8 @@ const noBlur = () =>
 
 for (const course of COURSES) {
   test(course.name, async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
     await page.addInitScript(noBlur);
     // ?freeze stops the clock, and stops drawing once the view is complete (window.ride.held).
     await page.goto(`?freeze&${course.query}`);
@@ -24,5 +26,6 @@ for (const course of COURSES) {
       timeout: 5 * 60_000,
     });
     await expect(page).toHaveScreenshot(`${course.name}.png`);
+    expect(errors, 'JavaScript errors in the page').toEqual([]);
   });
 }

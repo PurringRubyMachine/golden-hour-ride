@@ -1,0 +1,33 @@
+// Builds the scene and starts the ride. Each module builds its part when it is imported. Each draws on its own
+// random stream (util/random.js), so the order here does not change where anything is placed.
+import './util/dom.js';
+import './util/random.js';
+import './util/noise.js';
+import './options.js';
+import './uniforms.js';
+import './render/renderer.js';
+import './render/sky.js';
+import './course/road.js';
+import './course/terrain.js';
+import './scenery/roadway.js';
+import './scenery/grass.js';
+import './scenery/pastoral.js';
+import './scenery/meadow.js';
+import './scenery/chalets.js';
+import './scenery/trees.js';
+import './scenery/lights.js';
+import './scenery/buildings.js';
+import './scenery/clouds.js';
+import './scenery/smoke.js';
+import './weather.js';
+import './cockpit.js';
+import './render/post.js';
+import './physics.js';
+import './state.js';
+import './ui/controls.js';
+import './devices/ftms.js';
+import './devices/trainer.js';
+import './ui/ride-log.js';
+import './ui/voice.js';
+import './audio.js';
+import './ride.js';

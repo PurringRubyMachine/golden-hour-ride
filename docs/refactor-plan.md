@@ -157,9 +157,26 @@ Each phase is its own branch and pull request, and leaves the ride working.
 
 ### Phase 2: split into modules
 
+Status: done. One deviation from the target layout: `state.js` (the ride state, `window.ride`) and `scene.js` (the build order) were added; the ride state did not fit any of the planned modules.
+
 - Move code into the target layout without changing behaviour. Modules run in import order, so keeping the order keeps the shared random stream identical, and the screenshots should match pixel for pixel.
 - Then, in a separate commit, give each part of the scene its own seeded stream. Scenery placement changes once, on purpose: retake the baseline and review it by eye. After that, editing one module no longer moves another module's trees.
 - Unit tests for `physics.js`, `devices/ftms.js` and `options.js`.
+
+#### How phase 2 is done
+
+Each step is its own commit, and every step except the last must keep the three screenshot baselines pixel-identical.
+
+1. **Prepare inside `index.html`.** Small changes that make a clean split possible, without changing behaviour:
+   - Shared shader uniforms (`uTime`, `uSunAmt`, the rain amount and others) move to the top, because sections use them before the section that declares them.
+   - The smoothed gradient moves from a variable declared in the ride loop to `st.grade`, because the trainer code, earlier in the file, reads it.
+   - The weather code no longer reassigns the sky's environment map directly; the sky section provides a function that swaps it.
+   - URL parameters are read in one place (`options.js`).
+   - The speed model (`physics.js`) and the FTMS trainer messages (`devices/ftms.js`) become pure functions with the same arithmetic in the same order.
+2. **Split.** The script moves into `src/` modules. A one-off script slices the sections, then works out each module's imports and exports from what it declares and uses, and refuses to produce an import that points to a later module. Modules still build their part of the scene when imported, and `src/main.js` imports them in the original order, so the random stream is consumed in the same order. Turning modules into explicit `init()` functions is left for later; it is a bigger change than a move. The CSS moves to `styles/main.css`, and the Pages workflow publishes `src/` and `styles/`.
+3. **Format and lint.** Prettier reformats `src/`, and ESLint now covers it. Lint fixes must not change behaviour.
+4. **Unit tests** with Node's built-in test runner (`node --test`), no new dependencies.
+5. **Separate random streams.** Each part of the scene gets its own seeded stream, and each patch of verge grass is seeded by its position on the road, so grass no longer depends on the order patches are built in. This changes the picture once: retake the baselines and review them by eye.
 
 ### Phase 3: course format and loader
 
