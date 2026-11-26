@@ -1,7 +1,7 @@
 {
   "builtWith": "tools/coursebuilder",
   "date": "2026-11-26",
-  "command": "python -m tools.coursebuilder build --id gatineau-park-loop --name 'Gatineau Park Loop' --short-name Gatineau --description 'Up the Gatineau and Champlain Parkways to the Champlain Lookout over the Ottawa Valley, and back by the Fortune Parkway.' --route tools/.cache/gatineau-park-loop.gpx --dtm tools/.cache/hrdem-gatineau --heights-credit 'Heights: Natural Resources Canada HRDEM, Open Government Licence – Canada.' --heights-licence OGL-Canada-2.0 --heights-url https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b --credit 'Route: Gatineau Park Loop on Ride with GPS (route 34405323), along roads © OpenStreetMap contributors.|ODbL-1.0|https://ridewithgps.com/routes/34405323' --margin 800 --start 3000",
+  "command": "python -m tools.coursebuilder build --id gatineau-park-loop --name 'Gatineau Park Loop' --short-name Gatineau --description 'Up the Gatineau and Champlain Parkways to the Champlain Lookout over the Ottawa Valley, and back by the Fortune Parkway.' --route tools/.cache/gatineau-park-loop.gpx --dtm tools/.cache/hrdem-gatineau --heights-credit 'Heights: Natural Resources Canada HRDEM, Open Government Licence – Canada.' --heights-licence OGL-Canada-2.0 --heights-url https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b --credit 'Route: Gatineau Park Loop on Ride with GPS (route 34405323), along roads © OpenStreetMap contributors.|ODbL-1.0|https://ridewithgps.com/routes/34405323' --margin 800 --start 3000 --imagery tools/.cache/s2-gatineau/sentinel2.tif --imagery-credit 'Ground from above: contains modified Copernicus Sentinel data 2024.' --imagery-licence 'Copernicus Sentinel data licence' --imagery-url https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice",
   "route": {
     "file": "gatineau-park-loop.gpx",
     "sha256": "4ea59657963da0e05166e1ec9241368533e7e599efd7ecc467cf68e9e1c968c2",
@@ -392,5 +392,13 @@
   },
   "openStreetMap": {
     "dataAsOf": "2026-11-26T16:55:02Z"
+  },
+  "imagery": {
+    "files": [
+      {
+        "file": "sentinel2.tif",
+        "scenes": ["S2A_18TVR_20240701_0_L2A"]
+      }
+    ]
   }
 }
