@@ -1,0 +1,16 @@
+[
+  {
+    "id": "valley",
+    "name": "The valley",
+    "shortName": "Valley",
+    "lengthKm": 3.3,
+    "climbM": 70
+  },
+  {
+    "id": "leckhampton",
+    "name": "Leckhampton Hill loop",
+    "shortName": "Leckhampton",
+    "lengthKm": 11.9,
+    "climbM": 228
+  }
+]

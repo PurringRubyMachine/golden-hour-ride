@@ -1,3 +1,5 @@
 # Course data is generated.
 assets/
 package-lock.json
+courses/*/road.json
+courses/*/scenery.json
