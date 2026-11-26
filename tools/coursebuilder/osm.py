@@ -215,7 +215,7 @@ def woods_mask(frame, woods, holes):
 
 
 def scenery(frame, road_xz, cache_dir):
-    """Fetch and convert the OpenStreetMap scenery for a course."""
+    """Fetch and convert the OpenStreetMap scenery for a course. Returns it, and how current the map data was."""
     west, south, east, north = frame.bounds_lonlat()
     data = fetch(query(south, west, north, east), cache_dir)
-    return convert(data.get("elements", []), frame, road_xz)
+    return convert(data.get("elements", []), frame, road_xz), data.get("osm3s", {}).get("timestamp_osm_base")
