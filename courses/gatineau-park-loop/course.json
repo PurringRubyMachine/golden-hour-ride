@@ -1,0 +1,45 @@
+{
+  "format": 1,
+  "id": "gatineau-park-loop",
+  "name": "Gatineau Park Loop",
+  "shortName": "Gatineau",
+  "description": "Up the Gatineau and Champlain Parkways to the Champlain Lookout over the Ottawa Valley, and back by the Fortune Parkway.",
+  "kind": "survey",
+  "loop": true,
+  "start": 3000,
+  "origin": {
+    "crs": "EPSG:32618",
+    "x": 434660,
+    "y": 5036860
+  },
+  "terrain": {
+    "file": "terrain.bin",
+    "size": 13400,
+    "cells": 1340,
+    "min": 42.46143341064453,
+    "max": 381.6982116699219
+  },
+  "road": "road.json",
+  "scenery": {
+    "file": "scenery.json",
+    "style": "plain",
+    "options": {}
+  },
+  "credits": [
+    {
+      "text": "Heights: Natural Resources Canada HRDEM, Open Government Licence – Canada.",
+      "licence": "OGL-Canada-2.0",
+      "url": "https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b"
+    },
+    {
+      "text": "Route: Gatineau Park Loop on Ride with GPS (route 34405323), along roads © OpenStreetMap contributors.",
+      "licence": "ODbL-1.0",
+      "url": "https://ridewithgps.com/routes/34405323"
+    },
+    {
+      "text": "Buildings, woods and hedges © OpenStreetMap contributors.",
+      "licence": "ODbL-1.0",
+      "url": "https://www.openstreetmap.org/copyright"
+    }
+  ]
+}

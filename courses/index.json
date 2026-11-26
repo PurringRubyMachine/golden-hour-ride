@@ -11,6 +11,13 @@
     "name": "Leckhampton Hill loop",
     "shortName": "Leckhampton",
     "lengthKm": 11.8,
-    "climbM": 228
+    "climbM": 226
+  },
+  {
+    "id": "gatineau-park-loop",
+    "name": "Gatineau Park Loop",
+    "shortName": "Gatineau",
+    "lengthKm": 41.0,
+    "climbM": 668
   }
 ]

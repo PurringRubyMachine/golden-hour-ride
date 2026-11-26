@@ -15,6 +15,7 @@ const COURSES = {
   valley: '',
   christmas: 'theme=christmas',
   leckhampton: 'course=leckhampton',
+  gatineau: 'course=gatineau-park-loop',
 };
 const courses = arg('courses', Object.keys(COURSES).join(',')).split(',');
 const seconds = +arg('seconds', 6);

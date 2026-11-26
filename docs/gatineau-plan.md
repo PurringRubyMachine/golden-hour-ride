@@ -41,6 +41,18 @@ A 41.7 km loop is the largest course yet. With the usual 1300 m margin the terra
 - Credits: the route (above); "Heights: Natural Resources Canada HRDEM, Open Government Licence – Canada" (`OGL-Canada-2.0`); OpenStreetMap for the scenery (the builder adds it).
 - `docs/adding-a-course.md`: the Canada example uses `fetch-hrdem`.
 
+## What happened
+
+- **Route:** the GPX export needs signing in; the public JSON gave the same 1,855 track points. (A "GPX Route" export has only the 14 turns: the builder now warns when a GPX's points are far apart.)
+- **Heights:** `fetch-hrdem` read 378 tiles (36 fine, 342 coarse; 40 MB) from mosaics `8_2` and `9_2` in about 8 seconds, with no gaps.
+- **Builder speed:** the first build took over 10 minutes: for each of hundreds of fine tiles, the DTM reader converted all 378 files' bounds into the working coordinate system again. They are now worked out once per file: the build takes 71 seconds.
+- **Bridges:** the first build had 20 % ramps where the road crosses two valleys on bridges (each passed twice): the bare-ground DTM has no bridge decks, so the road dipped 3–4 m. The builder now fetches road bridges from OpenStreetMap and draws the road straight across them (`road.across_bridges`): steepest 8.5 % up and 7.9 % down, climbing 668 m (Ride with GPS says 630). Leckhampton has three bridges too: its road is rebuilt, moving 14 of 791 points by up to 1.7 m, far from the start, and its climbing goes from 228 to 226 m. Its screenshot changes in the fields only: pastures and stubble are placed by road height, so their random draws shift.
+- **The course:** 41.0 km, a 13.4 km terrain square (800 m margin), 3.9 MB. Start at 3 km, on the parkway (the route begins in a car park).
+- **Measured:** at High, up to 2,090 draw calls and 6.1 million triangles (Leckhampton: about 370 and 3.7 million). On the Intel UHD 630 at Low, 35 fps (Leckhampton 54).
+- **Woods:** OpenStreetMap marks 60 % of the square as woodland (107 km²), so the data is there; but the app's 26,000 trees spread over it stand about 12 times further apart than at Leckhampton, and the park looks like grassland with scattered trees.
+
+So the app does need changes for a course this size, as the plan foresaw: dense woods near the road, and fewer draw calls and triangles far away. They are follow-up pull requests; this one adds the course and the builder changes.
+
 ## Checking
 
 - Builder: Ruff, pytest (new tests for `fetch-hrdem`).
