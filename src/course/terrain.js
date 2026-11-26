@@ -176,7 +176,35 @@ terrainMat.onBeforeCompile = (s) => {
     diffuseColor.rgb *= mix(mix(gc, rc, rockAmt), ${XMAS ? 'vec3(0.66, 0.70, 0.78)' : 'vec3(0.92)'}, snowAmt) * mix(1., vShade, uSunAmt);`,
     );
 };
-const terrain = new THREE.Mesh(tGeo, terrainMat);
-terrain.receiveShadow = true;
-terrain.castShadow = true;
-scene.add(terrain);
+// The ground is drawn in 8 x 8 tiles sharing one set of vertices, so the camera, and the sun's shadow (which covers
+// only the ground round the rider), can each skip the tiles they can't see.
+{
+  const span = Math.ceil(TG / 8),
+    v = new THREE.Vector3();
+  for (let tz = 0; tz < TG; tz += span)
+    for (let tx = 0; tx < TG; tx += span) {
+      const x1 = Math.min(TG, tx + span),
+        z1 = Math.min(TG, tz + span),
+        idx = new Uint32Array((x1 - tx) * (z1 - tz) * 6),
+        box = new THREE.Box3();
+      let q = 0;
+      for (let iz = tz; iz < z1; iz++)
+        for (let ix = tx; ix < x1; ix++) {
+          const a = iz * TW + ix,
+            b = a + TW;
+          idx.set([a, b, a + 1, a + 1, b, b + 1], q); // the same two triangles per cell as tGeo
+          q += 6;
+        }
+      for (let iz = tz; iz <= z1; iz++)
+        for (let ix = tx; ix <= x1; ix++) box.expandByPoint(v.fromArray(tPos, (iz * TW + ix) * 3));
+      const g = new THREE.BufferGeometry();
+      for (const [name, attr] of Object.entries(tGeo.attributes)) g.setAttribute(name, attr);
+      g.setIndex(new THREE.BufferAttribute(idx, 1));
+      g.boundingBox = box;
+      g.boundingSphere = box.getBoundingSphere(new THREE.Sphere());
+      const tile = new THREE.Mesh(g, terrainMat);
+      tile.receiveShadow = true;
+      tile.castShadow = true;
+      scene.add(tile);
+    }
+}

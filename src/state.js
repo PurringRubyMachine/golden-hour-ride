@@ -7,7 +7,8 @@ import { setWeather } from './weather.js';
 
 const START = course.start ?? 0; // where the course says to begin
 
-// frame: frames drawn so far; pending: verge grass near the rider still to be built (one patch is built per frame)
+// frame: frames drawn so far; pending: verge grass near the rider still to be built (one patch is built per frame);
+// stats: draw calls and triangles in the last frame, all passes together (see tests/perf)
 export const st = {
   s: isFinite(AT) ? AT : START,
   v: 6,
@@ -18,6 +19,7 @@ export const st = {
   frame: 0,
   pending: 0,
   grade: 0,
+  stats: { calls: 0, triangles: 0 },
 };
 window.ride = st;
 st.haze = hazeCol;

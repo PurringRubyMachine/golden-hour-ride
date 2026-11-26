@@ -4,7 +4,7 @@ import { $ } from './util/dom.js';
 import { smooth } from './util/noise.js';
 import { FREEZE, SCENERY } from './options.js';
 import { uMeadow, uTime } from './uniforms.js';
-import { camera, scene } from './render/renderer.js';
+import { camera, renderer, scene } from './render/renderer.js';
 import { sun, sunDir } from './render/sky.js';
 import { LEN, at, mkPose } from './course/road.js';
 import { chunks } from './scenery/grass.js';
@@ -54,7 +54,11 @@ if (SCENERY !== null) {
   if (SCENERY === 'nobars') rig.visible = false;
 }
 
+// count what each frame draws across all its passes (shadows, scene, post-processing), for window.ride.stats
+renderer.info.autoReset = false;
+
 function tick() {
+  renderer.info.reset();
   const dt = FREEZE ? 0 : Math.min(clock.getDelta(), 0.05);
   uTime.value += dt;
 
@@ -150,6 +154,8 @@ function tick() {
   }
 
   composer.render();
+  st.stats.calls = renderer.info.render.calls;
+  st.stats.triangles = renderer.info.render.triangles;
   st.frame++;
   if (first) {
     first = false;
