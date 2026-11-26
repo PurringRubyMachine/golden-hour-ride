@@ -208,6 +208,14 @@ Status: done. Deviations from the target layout: the loader stays in `course/cou
 
 ### Phase 4: course builder
 
+Status: done.
+
+- **Acceptance test:** passes, with road heights 0.11 m apart on average (0.58 m at most) and climbing 228 m both before and after.
+- **Scenery check:** a full build with OpenStreetMap, outside the test, matched the old buildings and hedges almost exactly (8,238 against 8,240 buildings; 906 against 907 hedge and wall pieces). It found more single trees and woodland near the edges of the terrain square, which the old cache didn't cover. In the ride, the rebuilt course looks almost identical to the current one.
+- **Changes during the build:**
+  - `build.py` holds the build steps, and `__main__.py` only reads the command line.
+  - `fetch-ea` fetches two tiles at a time and retries timeouts, because the service sometimes takes more than a minute to answer.
+
 - Build `tools/coursebuilder/` as described above.
 - pytest tests with small synthetic DTMs: a tilted plane gives a known gradient, a no-data hole gets filled, and another file uses a different coordinate system.
 - **Acceptance test:** export the Leckhampton road as GPX (from British National Grid to WGS84 with pyproj), fetch Environment Agency tiles with `fetch-ea`, rebuild, and compare. Road heights within 0.5 m on average and total climbing within 3 %. OpenStreetMap features will differ slightly because the data is newer; that's expected.
@@ -236,8 +244,8 @@ Status: done. Deviations from the target layout: the loader stays in `course/cou
   - **Mixed files:** different resolutions and coordinate systems can be mixed. Each file is reprojected on the fly with `rasterio.warp.reproject`, finest last, so where files overlap the finest wins.
   - **Fine heights:** road heights come from 2 m tiles along the road, as now. The terrain is a 10 m grid, averaged over each cell.
 - **Gaps in the DTM:**
-  - **Small holes:** holes in the terrain up to 200 m across are filled with GDAL's `fillnodata`.
-  - **Stop with a clear message:** if more than 1 % of the terrain grid, or any part of the road, has no data. The message gives the missing area in latitude and longitude, and suggests a smaller `--margin` if the gap is at the edges.
+  - **Small holes:** terrain grid points with no data are filled with GDAL's `fillnodata` from data up to 200 m away. Road points without fine heights (a gap, or water) take the filled terrain's height, and the builder says how many did.
+  - **Stop with a clear message:** if more than 1 % of the terrain grid has no data, if a hole is too wide to fill, or if the DTM misses the road altogether. The message gives the missing area in latitude and longitude, and suggests a smaller `--margin` if the gap is at the edges.
 - **Road heights:** today's method (the flattest point across the road, a 5-point median, then two passes of a 7-point moving average). The smoothing now wraps round the loop's ends.
 - **Pastoral scenery:** with `--scenery-style pastoral-1800s`, sheep appear above the 65th percentile of the road's heights and stooks below the 35th, rounded to 5 m. `--sheep-above`, `--stooks-below` and `--smoke LAT,LON` (repeatable) override them.
 - **Credits:**
