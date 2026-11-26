@@ -20,6 +20,10 @@
     "max": 297.9796142578125
   },
   "road": "road.json",
+  "imagery": {
+    "file": "ground.jpg",
+    "size": 2048
+  },
   "scenery": {
     "file": "scenery.json",
     "style": "pastoral-1800s",
@@ -39,6 +43,11 @@
       "text": "Route © OpenStreetMap contributors.",
       "licence": "ODbL-1.0",
       "url": "https://www.openstreetmap.org/copyright"
+    },
+    {
+      "text": "Ground from above: contains modified Copernicus Sentinel data 2026.",
+      "licence": "Copernicus Sentinel data licence",
+      "url": "https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice"
     },
     {
       "text": "Buildings, woods and hedges © OpenStreetMap contributors.",

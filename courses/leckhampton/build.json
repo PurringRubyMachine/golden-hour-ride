@@ -1,7 +1,7 @@
 {
   "builtWith": "tools/coursebuilder",
   "date": "2026-11-26",
-  "command": "python -m tools.coursebuilder build --id leckhampton --name 'Leckhampton Hill loop' --short-name Leckhampton --description 'A loop over the Cotswold scarp above Cheltenham, past the old quarries on Leckhampton Hill.' --route courses/leckhampton/route.gpx --dtm tools/.cache/ea-leckhampton --heights-credit 'Heights: Environment Agency LiDAR, Open Government Licence.' --heights-licence OGL-UK-3.0 --heights-url https://environment.data.gov.uk/survey --credit 'Route © OpenStreetMap contributors.|ODbL-1.0|https://www.openstreetmap.org/copyright' --scenery-style pastoral-1800s --sheep-above 175 --stooks-below 150 --smoke 51.8642,-2.0787 --start 850 --keep-route",
+  "command": "python -m tools.coursebuilder build --id leckhampton --name 'Leckhampton Hill loop' --short-name Leckhampton --description 'A loop over the Cotswold scarp above Cheltenham, past the old quarries on Leckhampton Hill.' --route courses/leckhampton/route.gpx --dtm tools/.cache/ea-leckhampton --heights-credit 'Heights: Environment Agency LiDAR, Open Government Licence.' --heights-licence OGL-UK-3.0 --heights-url https://environment.data.gov.uk/survey --credit 'Route © OpenStreetMap contributors.|ODbL-1.0|https://www.openstreetmap.org/copyright' --scenery-style pastoral-1800s --sheep-above 175 --stooks-below 150 --smoke 51.8642,-2.0787 --start 850 --keep-route --imagery tools/.cache/s2-leckhampton-5-5/sentinel2.tif --imagery-credit 'Ground from above: contains modified Copernicus Sentinel data 2026.' --imagery-licence 'Copernicus Sentinel data licence' --imagery-url https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice",
   "route": {
     "file": "route.gpx",
     "sha256": "c02a3175c506129da6ccd3cd262311c7bc15dff9db337edc0a0b2cf29c5f0895",
@@ -74,5 +74,13 @@
   },
   "openStreetMap": {
     "dataAsOf": "2026-11-26T03:50:51Z"
+  },
+  "imagery": {
+    "files": [
+      {
+        "file": "sentinel2.tif",
+        "scenes": ["S2A_30UWC_20260527_0_L2A"]
+      }
+    ]
   }
 }
